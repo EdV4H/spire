@@ -16,6 +16,8 @@ export interface NodeStyle {
 	fill: string;
 	stroke: string;
 	strokeWidth: number;
+	/** 0-1. The usual way to say "this one is not available yet". */
+	opacity?: number;
 	/** Overrides applied per status, merged over the base. */
 	byStatus?: Partial<Record<NodeStatus, Partial<Omit<NodeStyle, "byStatus">>>>;
 }
@@ -61,7 +63,7 @@ export const defaultTheme: SpireTheme = {
 			byStatus: {
 				completed: { fill: "#18181b", stroke: "#18181b" },
 				reachable: { fill: "#ffffff", stroke: "#18181b", strokeWidth: 3 },
-				locked: { fill: "#fafafa", stroke: "#d4d4d8" },
+				locked: { fill: "#fafafa", stroke: "#d4d4d8", opacity: 0.55 },
 			},
 		},
 	},

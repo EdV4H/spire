@@ -1,0 +1,31 @@
+# @edv4h/spire-playground
+
+プラグインと機能を手で触って確かめる場所。UI に凝る場所ではなく、SDK の挙動が
+実際にそうなっていることを目で確かめるための test surface。
+
+```bash
+pnpm --filter @edv4h/spire-playground dev   # http://127.0.0.1:4590
+```
+
+## 何が試せるか
+
+| | |
+|---|---|
+| **プラグインの ON/OFF** | `createSpire` を組み直す。gen を切ると rules-extra が `missing_dependency` で落ちるのが見える |
+| **GenSpec の編集** | プリセット6種。「充足不能」を選ぶと、どのノードがどのルールに阻まれたかを名指しするエラーが出る |
+| **進行ポリシーの切替** | `strict` / `free` / `quorum` / `row-order` を選んで同じノードを押すと、拒否のされ方が変わる |
+| **ノードの完了・取り消し** | クリックで `complete` / `uncomplete`。拒否されたら `RuleViolation` がそのまま出る |
+| **CRDT マージ** | 「状態を分岐」→ 別ノードを完了 →「分岐をマージ」で `mergeStates` の結果が入る |
+| **regenerate / insertNode** | 完了済みを保ったまま再割当、空きセルへの挿入。挿入できなければ `no_space` |
+| **レイアウト** | orientation / jitter / curvature をその場で変える |
+| **レジストリの中身** | 何が登録されていて、どのプラグインが登録したかが右に出る |
+| **renderToSVG** | 「SVG をコピー」でクリップボードに入る。React の描画と同一ジオメトリ |
+
+## 作りについて
+
+- プラグイン配列は **useEffect の中で毎回組み立てる**。モジュールトップに置くと
+  StrictMode の二重マウントで2つの `Spire` がインスタンスを共有してしまう
+- インスペクタが出している数値・エラーはすべて SDK の関数の戻り値そのまま。
+  アプリ側で計算し直しているものは無い
+- `vite.config.ts` は `resolve.conditions: ["source"]` を使い、`packages/*` の
+  ソースを直接読む。SDK を触ったら即座にここに反映される

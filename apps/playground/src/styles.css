@@ -1,0 +1,395 @@
+/*
+ * Plain on purpose. This is a test surface for the SDK, so the styling stays
+ * out of the way: one accent, one mono face for anything the SDK produced, and
+ * enough structure to scan three columns at once.
+ */
+
+:root {
+	--ground: #f4f6f8;
+	--surface: #ffffff;
+	--ink: #1b2028;
+	--muted: #6c7683;
+	--line: #dfe4ea;
+	--accent: #2f4bd0;
+	--error: #b91c1c;
+	--warn: #b45309;
+	--ok: #15803d;
+	--mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--ground);
+	color: var(--ink);
+	font:
+		14px / 1.6 system-ui,
+		-apple-system,
+		"Hiragino Sans",
+		"Noto Sans JP",
+		sans-serif;
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: 340px minmax(0, 1fr) 360px;
+	grid-template-areas: "head head head" "left center right";
+	gap: 16px;
+	padding: 16px;
+	align-items: start;
+	min-height: 100vh;
+}
+
+.masthead {
+	grid-area: head;
+	display: flex;
+	align-items: baseline;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+.masthead h1 {
+	margin: 0;
+	font-size: 18px;
+	letter-spacing: -0.01em;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+.column--left {
+	grid-area: left;
+}
+.column--center {
+	grid-area: center;
+}
+.column--right {
+	grid-area: right;
+	position: sticky;
+	top: 16px;
+	max-height: calc(100vh - 32px);
+	overflow-y: auto;
+}
+
+.panel {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+}
+
+.panel h2 {
+	margin: 0;
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted);
+}
+.panel h3 {
+	margin: 0 0 6px;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
+}
+
+.hint {
+	margin: 0;
+	font-size: 12px;
+	color: var(--muted);
+}
+.mono {
+	font-family: var(--mono);
+	font-size: 12px;
+}
+code {
+	font-family: var(--mono);
+	font-size: 12px;
+}
+
+/* controls */
+
+button {
+	font: inherit;
+	padding: 6px 12px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	cursor: pointer;
+}
+button:hover:not(:disabled) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+button:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+button.primary:hover:not(:disabled) {
+	color: #fff;
+	opacity: 0.9;
+}
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+select,
+input[type="range"] {
+	font: inherit;
+}
+select {
+	padding: 4px 6px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.chip {
+	padding: 4px 10px;
+	font-size: 12px;
+	border-radius: 999px;
+}
+.chip--on {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+.chip--on:hover {
+	color: #fff;
+}
+
+.editor {
+	width: 100%;
+	resize: vertical;
+	padding: 10px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: #fbfcfd;
+	color: var(--ink);
+	line-height: 1.5;
+}
+
+.checklist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.checklist li {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.checklist label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.actions {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.actions label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* alerts */
+
+.alert {
+	border-radius: 4px;
+	padding: 10px 12px;
+	font-size: 13px;
+	border: 1px solid;
+}
+.alert p,
+.alert ul {
+	margin: 4px 0 0;
+}
+.alert ul {
+	padding-left: 18px;
+}
+.alert--error {
+	border-color: #f0c4c4;
+	background: #fdf3f3;
+	color: var(--error);
+}
+.alert--warn {
+	border-color: #f0dcb8;
+	background: #fdf8ef;
+	color: var(--warn);
+}
+.alert--note {
+	border-color: #c9d4f5;
+	background: #f3f6fd;
+	color: var(--accent);
+}
+
+/* map */
+
+.panel--map {
+	gap: 12px;
+}
+.map-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 18px;
+	align-items: center;
+}
+.map-controls label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.canvas {
+	background: #fff;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	overflow: auto;
+	max-height: 70vh;
+	display: flex;
+	justify-content: center;
+	padding: 8px;
+}
+.canvas svg {
+	display: block;
+}
+.empty {
+	color: var(--muted);
+	padding: 48px 0;
+}
+
+.map-foot {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.transitions {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	color: var(--muted);
+}
+
+/* inspector */
+
+.block {
+	border-top: 1px solid var(--line);
+	padding-top: 10px;
+}
+.block:first-of-type {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px 12px;
+	margin: 0;
+}
+.stats div {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+.stats dt {
+	color: var(--muted);
+}
+.stats dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.ok {
+	color: var(--ok);
+	margin: 0;
+}
+.errors {
+	margin: 0;
+	padding-left: 16px;
+	font-size: 12px;
+	color: var(--error);
+}
+
+.json {
+	margin: 0;
+	max-height: 220px;
+	overflow: auto;
+	background: #fbfcfd;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	padding: 8px;
+	line-height: 1.45;
+}
+
+.registry {
+	margin-bottom: 10px;
+}
+.registry-title {
+	color: var(--muted);
+}
+.registry ul {
+	list-style: none;
+	margin: 2px 0 0;
+	padding: 0;
+}
+.registry li {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
+.by {
+	color: var(--muted);
+}
+
+.ordered {
+	margin: 4px 0 0;
+	padding-left: 20px;
+}
+.loaded {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+@media (max-width: 1200px) {
+	.layout {
+		grid-template-columns: 1fr;
+		grid-template-areas: "head" "left" "center" "right";
+	}
+	.column--right {
+		position: static;
+		max-height: none;
+	}
+}

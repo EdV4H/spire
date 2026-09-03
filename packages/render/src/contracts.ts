@@ -1,42 +1,43 @@
 import type { MapDocument, NodeId, NodeStatus, SpireNode, StateDocument } from "@edv4h/spire-core";
 import type { Orientation } from "@edv4h/spire-layout";
+import type { ReactElement } from "react";
 import type { SpireTheme } from "./theme.js";
-
-/**
- * Renderer contracts — **types only in v0.1.**
- *
- * The React component, `renderToSVG` and `renderToPNG` are not implemented yet.
- * They are declared here because the surface is settled and both the layout
- * package and application code are written against it; the implementations land
- * in the next release. Nothing in this file has a runtime behaviour to rely on,
- * and no export here silently no-ops — there is simply nothing to call.
- */
 
 export interface SpireMapProps {
 	map: MapDocument;
 	state: StateDocument;
 	theme?: SpireTheme;
 	orientation?: Orientation;
+	/** Overrides the theme's spacing. */
+	spacing?: { col: number; row: number };
+	/** Overrides the theme's jitter. */
+	jitter?: { amount: number; seed?: number };
+	padding?: number;
+	curvature?: number;
 	onNodePress?: (nodeId: NodeId) => void;
 	/**
-	 * Escape hatch: draw a node yourself. Returning `undefined` falls back to
-	 * the theme's default rendering, so a host can special-case one type
-	 * without reimplementing the rest.
+	 * Escape hatch: draw a node yourself. Return `undefined` or `null` to fall
+	 * back to the theme's circle, so a host can special-case one type without
+	 * reimplementing the rest. The returned element is placed inside a `<g>`
+	 * already translated to the node's centre — draw around the origin.
 	 */
-	renderNode?: (node: SpireNode, status: NodeStatus) => unknown;
+	renderNode?: (node: SpireNode, status: NodeStatus) => ReactElement | null | undefined;
 	/**
 	 * Fired when a node's derived status changes between renders. Animation is
-	 * an application concern; the renderer only says *when*, never *how*.
+	 * an application concern; the renderer says *when*, never *how*.
 	 */
 	onNodeStatusChange?: (change: { nodeId: NodeId; from: NodeStatus; to: NodeStatus }) => void;
-	/** Scroll the node into view on mount and whenever it changes. */
+	/** Scrolled into view whenever it changes. */
 	focusNodeId?: NodeId;
+	className?: string;
+	/** Accessible name for the whole map. Defaults to "Spire map". */
+	title?: string;
 }
 
+/** Options accepted by the static renderers. */
 export interface StaticRenderOptions {
 	theme?: SpireTheme;
 	orientation?: Orientation;
-	/** Scale factor applied to the layout's natural size. */
 	scale?: number;
 	background?: string;
 }

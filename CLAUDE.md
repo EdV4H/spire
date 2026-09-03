@@ -8,7 +8,7 @@
 
 ## 現在のステータス
 
-v0.1 実装中。`core` / `gen` / `layout` は実装済み。`render` は型とデフォルトテーマのみ（React コンポーネントと SVG/PNG レンダラは次フェーズ）。
+v0.1 実装中。`core` / `gen` / `layout` / `render` 実装済み。`renderToPNG` のみ未実装。プラグインと機能を手で触る `apps/playground` がある。
 
 ## 重要ドキュメント
 
@@ -54,6 +54,14 @@ v0.1 実装中。`core` / `gen` / `layout` は実装済み。`render` は型と�
 
 新しいルール・ポリシー・アルゴリズムを core / gen に直接足す前に、プラグインで足せないか考える。組み込みは「マップが構造的に成立するために要るもの」だけに保つ。
 
+### レンダリング
+
+React コンポーネントと `renderToSVG` は**必ず `buildScene` の出力だけを見る**。座標・状態・テーマの解決を二重に書いてはいけない（シェア画像が画面と食い違う原因になる）。アニメーションは SDK に入れない — `onNodeStatusChange` で「いつ」を報せるところまで。
+
+### playground
+
+SDK に機能を足したら `apps/playground` から触れるようにする。触れないものは実際には確かめられていない。プラグイン配列は必ず `useEffect` の中で組み立てる（モジュールトップだと StrictMode の二重マウントでインスタンスが共有される）。
+
 ## 技術スタック
 
 TypeScript 7 / zod 4 / pnpm workspaces / Turborepo / Biome / Vitest / fast-check / Changesets / prek
@@ -61,11 +69,14 @@ TypeScript 7 / zod 4 / pnpm workspaces / Turborepo / Biome / Vitest / fast-check
 ## パッケージ構成
 
 ```
+apps/
+  playground/  @edv4h/spire-playground — プラグインと機能を手で触る test surface
+
 packages/
   core/     @edv4h/spire-core     — SMF・検証・進行・グラフ・プラグインカーネル
   gen/      @edv4h/spire-gen      — 生成パイプライン
   layout/   @edv4h/spire-layout   — グリッド→画面座標
-  render/   @edv4h/spire-render   — レンダラ契約（v0.1 は型のみ）
+  render/   @edv4h/spire-render   — React / SVG レンダラ・テーマ
 
 plugins/
   rules-extra/    @edv4h/spire-plugin-rules-extra
@@ -84,5 +95,7 @@ examples/
 pnpm install
 pnpm turbo run typecheck build test
 pnpm lint
+
+pnpm --filter @edv4h/spire-playground dev              # http://127.0.0.1:4590
 pnpm --filter @edv4h/spire-example-cli start -- --walks 4 --count 5
 ```

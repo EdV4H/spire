@@ -25,6 +25,7 @@
 	},
 	"files": {
 		"includes": [
+			"apps/**",
 			"packages/**",
 			"plugins/**",
 			"examples/**",

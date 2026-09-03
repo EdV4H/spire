@@ -1,14 +1,45 @@
 # @edv4h/spire-render
 
-**v0.1 は型とデフォルトテーマのみ。** React コンポーネント・`renderToSVG` / `renderToPNG` は未実装で、次のリリースで入る。
+React レンダラ、静的 SVG レンダラ、テーマ。
 
-このパッケージが今あるのは、契約が固まっており `@edv4h/spire-layout` もアプリ側のコードもその型に対して書かれているため。**何も no-op で握り潰していない。呼べるものがまだ無いだけ。**
+```tsx
+import { SpireMap, renderToSVG, defaultTheme } from "@edv4h/spire-render";
 
-現時点で使えるもの:
+<SpireMap
+	map={map}
+	state={state}
+	theme={myTheme}
+	orientation="bottom-up"
+	onNodePress={(nodeId) => ...}
+	onNodeStatusChange={({ nodeId, from, to }) => ...}
+	focusNodeId={currentNodeId}
+/>;
 
-```ts
-import { defaultTheme, resolveEdgeStyle, resolveNodeStyle } from "@edv4h/spire-render";
-import type { SpireMapProps, SpireTheme, StaticRenderOptions } from "@edv4h/spire-render";
+const svg = renderToSVG(map, state, { theme: myTheme, scale: 2, title: "Q3 map" });
 ```
 
-`SpireTheme.node` は `default` が必須。テーマがホスト定義の型を styling し忘れることは型レベルで起きない。
+## 1つの Scene から2つのレンダラ
+
+`buildScene(map, state, options)` がレイアウト・状態・テーマを解決して、色まで
+決まった図形のリストを返す。React コンポーネントと `renderToSVG` は**これしか
+見ない**。シェア画像が画面と食い違うのは最悪の壊れ方なので、どこに何をどの色で
+描くかを決める場所を1つに絞ってある。テストでも両者のジオメトリ一致を検証している。
+
+`renderToSVG` は DOM を触らないのでサーバでも動く。
+
+## テーマ
+
+`SpireTheme.node` はノードタイプ ID → スタイルの対応で、`default` が必須。
+タイプ ID は利用者定義の不透明な文字列なので、`gate` がどう見えるべきかは
+アプリケーションだけが知っている — SDK 同梱の `defaultTheme` はニュートラル1色のみ。
+
+## アニメーションは入っていない
+
+`onNodeStatusChange` で**いつ**変わったかは報せるが、**どう**祝うかは提供しない。
+完了演出はプロダクトの判断であり、焼き込むとすべての Spire マップが同じ製品の
+顔になる。
+
+## 未実装
+
+`renderToPNG`。ブラウザなら `renderToSVG` の出力を `Image` + Canvas に通せば済み、
+サーバなら resvg などの選択がアプリ側の依存になる。SDK が決め打ちする理由が無い。
