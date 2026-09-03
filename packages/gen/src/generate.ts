@@ -12,16 +12,10 @@ import {
 	type ValidationError,
 	validateMap,
 } from "@edv4h/spire-core";
-import { candidatePool, createRejectionAssigner } from "./assign/rejection.js";
+import { candidatePool } from "./assign/rejection.js";
 import { buildSlots, populate } from "./populate.js";
-import {
-	createGenRegistries,
-	type GenRegistries,
-	getGenRegistries,
-	type Skeleton,
-} from "./registries.js";
-import { builtInRules } from "./rules/built-in.js";
-import { createStsWalksAlgorithm } from "./skeleton/sts-walks.js";
+import type { GenRegistries, Skeleton } from "./registries.js";
+import { resolveRegistries } from "./resolve-registries.js";
 import { type GenSpec, type GenSpecInput, genSpecSchema } from "./spec.js";
 import { validateConstraints } from "./validate.js";
 
@@ -234,21 +228,4 @@ function preparedFor(spec: GenSpec, registries: GenRegistries) {
 		if (parsed !== undefined && !parsed.success) return [];
 		return [{ rule, params: (parsed?.data as Record<string, unknown>) ?? params }];
 	});
-}
-
-/**
- * Built-in-only registries, so `generate(spec)` works without a Spire for a
- * spec that names nothing custom.
- */
-function resolveRegistries(spire: Spire | undefined): GenRegistries {
-	if (spire !== undefined) {
-		const registered = getGenRegistries(spire);
-		if (registered !== undefined) return registered;
-	}
-
-	const registries = createGenRegistries();
-	for (const rule of builtInRules()) registries.rules.register(rule);
-	registries.skeletons.register(createStsWalksAlgorithm());
-	registries.assigners.register(createRejectionAssigner());
-	return registries;
 }

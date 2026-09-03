@@ -44,3 +44,10 @@ GenSpec ─▶ ① skeleton  グリッド + ウォークで DAG 骨格（StS 型
 ## 停止性
 
 割当は rejection sampling で、試行上限（既定 1000）と早期打ち切り（同一ノードが同一理由で25回連続ブロック）を持つ。矛盾する GenSpec は無限に回らず、**どのノードがどのルールに阻まれたか**を含むエラーで返る。
+
+## マップの編集
+
+| | |
+|---|---|
+| `insertNode(map, { type, row, col? })` | 空きセルにノードを追加する。骨格生成が `walks < cols` で列に空きを残しているのはこのため。不変条件を壊さずに繋げられなければ `no_space` を返し、勝手に壊れたマップを返さない |
+| `regenerate(map, spec, { keepCompleted })` | 未完了ノードのタイプを再割当する。**構造は据え置き**。完了済みノードは type と data を保持したまま固定され、新しい spec の制約に反する場合は `map.meta.regenerateWarnings` で報告する（エラーにはしない） |

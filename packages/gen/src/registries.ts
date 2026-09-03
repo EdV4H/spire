@@ -126,6 +126,14 @@ export interface AssignInput {
 	spec: GenSpec;
 	rules: Registry<ConstraintRule>;
 	rng: Rng;
+	/**
+	 * Types that are already decided and must not change.
+	 *
+	 * `regenerate` uses this to hold completed nodes fixed while reshuffling the
+	 * rest. An assigner must treat these as given — including when they violate
+	 * a constraint, because the map they came from is history, not a proposal.
+	 */
+	pinned?: ReadonlyMap<NodeId, NodeTypeId>;
 }
 
 export interface AssignFailure {

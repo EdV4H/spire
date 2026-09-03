@@ -7,10 +7,14 @@ export {
 } from "./assign/rejection.js";
 export type { GenError, GenerateOptions } from "./generate.js";
 export { assignTypes, buildSkeleton, generate } from "./generate.js";
+export type { InsertFailure, InsertRequest, InsertResult } from "./insert.js";
+export { insertNode } from "./insert.js";
 export type { GenPluginOptions } from "./plugin.js";
 export { createGenPlugin, GEN_PLUGIN_ID } from "./plugin.js";
 export type { PopulateFailure } from "./populate.js";
 export { buildSlots, populate } from "./populate.js";
+export type { RegenerateOptions } from "./regenerate.js";
+export { regenerate } from "./regenerate.js";
 export type {
 	AssignFailure,
 	AssignInput,
@@ -30,6 +34,7 @@ export type {
 	TypeAssigner,
 } from "./registries.js";
 export { createGenRegistries, genService, getGenRegistries } from "./registries.js";
+export { resolveRegistries } from "./resolve-registries.js";
 export {
 	branchDistinctRule,
 	builtInRules,

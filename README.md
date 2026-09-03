@@ -116,8 +116,8 @@ Node 22+ / ESM 専用 / ランタイム依存は zod のみ。`@edv4h/spire-core
 正直に書いておく。以下は設計されているが**入っていない**:
 
 - `@edv4h/spire-render` の React コンポーネント、`renderToSVG`、`renderToPNG`
-- `regenerate(map, spec, { keepCompleted })`
-- `insertNode`
+
+`regenerate` はタイプの再割当のみで、構造は据え置き。理由は [`docs/deviations-from-design.md`](docs/deviations-from-design.md) §10。
 
 ## ライセンス
 

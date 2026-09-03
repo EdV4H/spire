@@ -74,7 +74,7 @@ export function createRejectionAssigner(options: RejectionOptions = {}): TypeAss
 			for (let attempt = 0; attempt < maxAttempts; attempt++) {
 				attempts = attempt + 1;
 				const rng = input.rng.fork();
-				const result = attemptAssignment(index, prepared.value, weights, rng);
+				const result = attemptAssignment(index, prepared.value, weights, rng, input.pinned);
 				if (result.ok) return ok(result.value);
 
 				lastBlock = result.error;
@@ -208,10 +208,19 @@ function attemptAssignment(
 	rules: readonly PreparedRule[],
 	weights: readonly (readonly [string, number])[],
 	rng: ReturnType<AssignInput["rng"]["fork"]>,
+	pinned?: ReadonlyMap<NodeId, NodeTypeId>,
 ): { ok: true; value: Map<NodeId, NodeTypeId> } | { ok: false; error: BlockedNode } {
 	const assigned = new Map<NodeId, NodeTypeId>();
 
+	// Pinned nodes are decided before anything is sampled, so a rule looking at a
+	// neighbour sees the pinned type whether that neighbour comes earlier or
+	// later in row order.
+	if (pinned !== undefined) {
+		for (const [nodeId, type] of pinned) assigned.set(nodeId, type);
+	}
+
 	for (const nodeId of index.ordered) {
+		if (pinned?.has(nodeId) === true) continue;
 		const position = index.positions.get(nodeId) ?? { col: 0, row: 0 };
 		const reasons: string[] = [];
 		const candidates = weights.filter(([type]) => {
