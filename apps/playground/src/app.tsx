@@ -46,7 +46,13 @@ export function App(): ReactElement {
 	const [busy, setBusy] = useState(false);
 	const [policy, setPolicy] = useState("strict");
 	const [violation, setViolation] = useState<string | undefined>(undefined);
+	// Selection and focus are separate on purpose. Clicking a node selects it —
+	// the inspector follows — but must not move the view: the thing you just
+	// clicked is by definition already where you are looking. Focus is only for
+	// moving the viewer somewhere they did not click, like a freshly inserted
+	// node further up the map.
 	const [selectedNodeId, setSelectedNodeId] = useState<NodeId | undefined>(undefined);
+	const [focusNodeId, setFocusNodeId] = useState<NodeId | undefined>(undefined);
 	const [transitions, setTransitions] = useState<readonly Transition[]>([]);
 
 	const log = useCallback((text: string) => {
@@ -81,6 +87,7 @@ export function App(): ReactElement {
 		setMap(result.value);
 		setState(emptyState(result.value));
 		setSelectedNodeId(undefined);
+		setFocusNodeId(undefined);
 		setTransitions([]);
 		setSnapshot(undefined);
 	}, [parsed, spire]);
@@ -144,6 +151,7 @@ export function App(): ReactElement {
 		setGenError(undefined);
 		setMap(result.value.map);
 		setSelectedNodeId(result.value.nodeId);
+		setFocusNodeId(result.value.nodeId);
 	}, [map]);
 
 	const onExportSvg = useCallback(() => {
@@ -274,7 +282,7 @@ export function App(): ReactElement {
 					view={view}
 					onView={setView}
 					onNodePress={onNodePress}
-					focusNodeId={selectedNodeId}
+					focusNodeId={focusNodeId}
 					transitions={transitions}
 				/>
 			</main>

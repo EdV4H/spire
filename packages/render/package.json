@@ -23,8 +23,10 @@
 		"@edv4h/spire-layout": "workspace:*"
 	},
 	"devDependencies": {
+		"@types/jsdom": "30.0.0",
 		"@types/react": "19.2.18",
 		"@types/react-dom": "19.2.5",
+		"jsdom": "30.0.1",
 		"react": "19.2.8",
 		"react-dom": "19.2.8",
 		"typescript": "7.0.2",

@@ -58,15 +58,40 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 		}
 	}, [scene, onNodeStatusChange]);
 
-	// Auto-focus: scroll the named node into view whenever it changes. Long maps
-	// are the normal case, so landing the viewer on "where am I" matters more
-	// than it would for a diagram.
+	// Auto-focus: centre the named node whenever it changes. Long maps are the
+	// normal case, so landing the viewer on "where am I" matters more than it
+	// would for a diagram.
+	//
+	// This scrolls the map's own scroll container and nothing else. The obvious
+	// implementation, `element.scrollIntoView`, walks up and scrolls *every*
+	// scrollable ancestor including the document, so focusing a node inside an
+	// embedded map yanks the whole page — the map is a component on someone
+	// else's page, and it has no business moving that page.
 	const rootRef = useRef<SVGSVGElement | null>(null);
 	useEffect(() => {
 		if (focusNodeId === undefined) return;
 		const root = rootRef.current;
-		const target = root?.querySelector(`[data-spire-node="${CSS.escape(focusNodeId)}"]`);
-		target?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+		if (root === null) return;
+
+		const target = root.querySelector(`[data-spire-node="${CSS.escape(focusNodeId)}"]`);
+		if (target === null) return;
+
+		const container = nearestScrollContainer(root);
+		if (container === null) return;
+
+		const targetBox = target.getBoundingClientRect();
+		const containerBox = container.getBoundingClientRect();
+
+		const left =
+			container.scrollLeft +
+			(targetBox.left - containerBox.left) -
+			(container.clientWidth - targetBox.width) / 2;
+		const top =
+			container.scrollTop +
+			(targetBox.top - containerBox.top) -
+			(container.clientHeight - targetBox.height) / 2;
+
+		container.scrollTo({ left, top, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 	}, [focusNodeId]);
 
 	return (
@@ -150,6 +175,34 @@ function defaultNode(node: SceneNode): ReactElement {
 			strokeWidth={node.strokeWidth}
 			opacity={node.opacity}
 		/>
+	);
+}
+
+/**
+ * The closest ancestor that actually scrolls. Returns `null` when the map is
+ * not inside one — in which case focusing does nothing, which is the right
+ * answer: there is no viewport of the map's own to move.
+ */
+function nearestScrollContainer(from: Element): Element | null {
+	let node = from.parentElement;
+	while (node !== null) {
+		const style = getComputedStyle(node);
+		// The shorthand is read alongside the longhands: not every environment
+		// expands `overflow: auto` into `overflowX`/`overflowY`.
+		const overflow = `${style.overflow} ${style.overflowX} ${style.overflowY}`;
+		const scrolls = /(auto|scroll|overlay)/.test(overflow);
+		if (scrolls && (node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth)) {
+			return node;
+		}
+		node = node.parentElement;
+	}
+	return null;
+}
+
+function prefersReducedMotion(): boolean {
+	return (
+		typeof window !== "undefined" &&
+		window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
 	);
 }
 
