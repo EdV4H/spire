@@ -13,13 +13,48 @@ importers:
         version: 2.5.11
       '@changesets/cli':
         specifier: 2.31.1
-        version: 2.31.1
+        version: 2.31.1(@types/node@24.10.1)
       '@j178/prek':
         specifier: 0.5.0
         version: 0.5.0
       turbo:
         specifier: 2.10.12
         version: 2.10.12
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  examples/acme-plugin-demo:
+    dependencies:
+      '@edv4h/spire-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@edv4h/spire-gen':
+        specifier: workspace:*
+        version: link:../../packages/gen
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
+
+  examples/cli:
+    dependencies:
+      '@edv4h/spire-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@edv4h/spire-gen':
+        specifier: workspace:*
+        version: link:../../packages/gen
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -38,7 +73,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
   packages/gen:
     dependencies:
@@ -57,7 +92,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
   packages/layout:
     dependencies:
@@ -70,7 +105,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
   packages/render:
     dependencies:
@@ -86,7 +121,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
   plugins/policy-quorum:
     dependencies:
@@ -102,7 +137,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
   plugins/rules-extra:
     dependencies:
@@ -121,7 +156,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 4.1.11
-        version: 4.1.11(vite@8.2.2)
+        version: 4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1))
 
 packages:
 
@@ -535,6 +570,9 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
+
+  '@types/node@24.10.1':
+    resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
@@ -1143,6 +1181,9 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -1312,7 +1353,7 @@ snapshots:
     dependencies:
       '@changesets/types': 6.1.0
 
-  '@changesets/cli@2.31.1':
+  '@changesets/cli@2.31.1(@types/node@24.10.1)':
     dependencies:
       '@changesets/apply-release-plan': 7.1.1
       '@changesets/assemble-release-plan': 6.0.10
@@ -1328,7 +1369,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@changesets/write': 0.4.0
-      '@inquirer/external-editor': 1.0.3
+      '@inquirer/external-editor': 1.0.3(@types/node@24.10.1)
       '@manypkg/get-packages': 1.1.3
       ansi-colors: 4.1.3
       enquirer: 2.4.1
@@ -1426,10 +1467,12 @@ snapshots:
       human-id: 4.2.1
       prettier: 2.8.8
 
-  '@inquirer/external-editor@1.0.3':
+  '@inquirer/external-editor@1.0.3(@types/node@24.10.1)':
     dependencies:
       chardet: 2.2.0
       iconv-lite: 0.7.3
+    optionalDependencies:
+      '@types/node': 24.10.1
 
   '@j178/prek-android-arm64@0.5.0':
     optional: true
@@ -1612,6 +1655,10 @@ snapshots:
 
   '@types/node@12.20.55': {}
 
+  '@types/node@24.10.1':
+    dependencies:
+      undici-types: 7.16.0
+
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
 
@@ -1681,13 +1728,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.1
 
-  '@vitest/mocker@4.1.11(vite@8.2.2)':
+  '@vitest/mocker@4.1.11(vite@8.2.2(@types/node@24.10.1))':
     dependencies:
       '@vitest/spy': 4.1.11
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.2.2
+      vite: 8.2.2(@types/node@24.10.1)
 
   '@vitest/pretty-format@4.1.11':
     dependencies:
@@ -2112,9 +2159,11 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
+  undici-types@7.16.0: {}
+
   universalify@0.1.2: {}
 
-  vite@8.2.2:
+  vite@8.2.2(@types/node@24.10.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -2122,12 +2171,13 @@ snapshots:
       rolldown: 1.2.6
       tinyglobby: 0.2.17
     optionalDependencies:
+      '@types/node': 24.10.1
       fsevents: 2.3.3
 
-  vitest@4.1.11(vite@8.2.2):
+  vitest@4.1.11(@types/node@24.10.1)(vite@8.2.2(@types/node@24.10.1)):
     dependencies:
       '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(vite@8.2.2)
+      '@vitest/mocker': 4.1.11(vite@8.2.2(@types/node@24.10.1))
       '@vitest/pretty-format': 4.1.11
       '@vitest/runner': 4.1.11
       '@vitest/snapshot': 4.1.11
@@ -2144,8 +2194,10 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.1
-      vite: 8.2.2
+      vite: 8.2.2(@types/node@24.10.1)
       why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 24.10.1
     transitivePeerDependencies:
       - msw
 

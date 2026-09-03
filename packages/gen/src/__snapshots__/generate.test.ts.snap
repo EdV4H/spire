@@ -1,0 +1,377 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generate — determinism > matches the recorded map for seed 42 1`] = `
+{
+  "edges": [
+    {
+      "from": "n0_1",
+      "id": "e_1_0_1_1",
+      "to": "n1_1",
+    },
+    {
+      "from": "n1_1",
+      "id": "e_1_1_0_2",
+      "to": "n2_0",
+    },
+    {
+      "from": "n2_0",
+      "id": "e_0_2_1_3",
+      "to": "n3_1",
+    },
+    {
+      "from": "n3_1",
+      "id": "e_1_3_0_4",
+      "to": "n4_0",
+    },
+    {
+      "from": "n4_0",
+      "id": "e_0_4_0_5",
+      "to": "n5_0",
+    },
+    {
+      "from": "n5_0",
+      "id": "e_0_5_0_6",
+      "to": "n6_0",
+    },
+    {
+      "from": "n6_0",
+      "id": "e_0_6_0_7",
+      "to": "n7_0",
+    },
+    {
+      "from": "n0_3",
+      "id": "e_3_0_4_1",
+      "to": "n1_4",
+    },
+    {
+      "from": "n1_4",
+      "id": "e_4_1_4_2",
+      "to": "n2_4",
+    },
+    {
+      "from": "n2_4",
+      "id": "e_4_2_3_3",
+      "to": "n3_3",
+    },
+    {
+      "from": "n3_3",
+      "id": "e_3_3_4_4",
+      "to": "n4_4",
+    },
+    {
+      "from": "n4_4",
+      "id": "e_4_4_3_5",
+      "to": "n5_3",
+    },
+    {
+      "from": "n5_3",
+      "id": "e_3_5_4_6",
+      "to": "n6_4",
+    },
+    {
+      "from": "n6_4",
+      "id": "e_4_6_3_7",
+      "to": "n7_3",
+    },
+    {
+      "from": "n0_4",
+      "id": "e_4_0_4_1",
+      "to": "n1_4",
+    },
+    {
+      "from": "n3_3",
+      "id": "e_3_3_2_4",
+      "to": "n4_2",
+    },
+    {
+      "from": "n4_2",
+      "id": "e_2_4_2_5",
+      "to": "n5_2",
+    },
+    {
+      "from": "n5_2",
+      "id": "e_2_5_3_6",
+      "to": "n6_3",
+    },
+    {
+      "from": "n6_3",
+      "id": "e_3_6_2_7",
+      "to": "n7_2",
+    },
+    {
+      "from": "n0_3",
+      "id": "e_3_0_2_1",
+      "to": "n1_2",
+    },
+    {
+      "from": "n1_2",
+      "id": "e_2_1_3_2",
+      "to": "n2_3",
+    },
+    {
+      "from": "n2_3",
+      "id": "e_3_2_2_3",
+      "to": "n3_2",
+    },
+    {
+      "from": "n3_2",
+      "id": "e_2_3_2_4",
+      "to": "n4_2",
+    },
+    {
+      "from": "n4_2",
+      "id": "e_2_4_1_5",
+      "to": "n5_1",
+    },
+    {
+      "from": "n5_1",
+      "id": "e_1_5_2_6",
+      "to": "n6_2",
+    },
+    {
+      "from": "n6_2",
+      "id": "e_2_6_1_7",
+      "to": "n7_1",
+    },
+  ],
+  "grid": {
+    "cols": 5,
+    "rows": 8,
+  },
+  "id": "map_f733",
+  "nodeTypes": [
+    {
+      "id": "bonus",
+    },
+    {
+      "id": "final",
+    },
+    {
+      "id": "gate",
+    },
+    {
+      "id": "step",
+    },
+  ],
+  "nodes": [
+    {
+      "id": "n0_1",
+      "position": {
+        "col": 1,
+        "row": 0,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n0_3",
+      "position": {
+        "col": 3,
+        "row": 0,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n0_4",
+      "position": {
+        "col": 4,
+        "row": 0,
+      },
+      "type": "bonus",
+    },
+    {
+      "id": "n1_1",
+      "position": {
+        "col": 1,
+        "row": 1,
+      },
+      "type": "gate",
+    },
+    {
+      "id": "n1_2",
+      "position": {
+        "col": 2,
+        "row": 1,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n1_4",
+      "position": {
+        "col": 4,
+        "row": 1,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n2_0",
+      "position": {
+        "col": 0,
+        "row": 2,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n2_3",
+      "position": {
+        "col": 3,
+        "row": 2,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n2_4",
+      "position": {
+        "col": 4,
+        "row": 2,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n3_1",
+      "position": {
+        "col": 1,
+        "row": 3,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n3_2",
+      "position": {
+        "col": 2,
+        "row": 3,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n3_3",
+      "position": {
+        "col": 3,
+        "row": 3,
+      },
+      "type": "gate",
+    },
+    {
+      "id": "n4_0",
+      "position": {
+        "col": 0,
+        "row": 4,
+      },
+      "type": "bonus",
+    },
+    {
+      "id": "n4_2",
+      "position": {
+        "col": 2,
+        "row": 4,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n4_4",
+      "position": {
+        "col": 4,
+        "row": 4,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n5_0",
+      "position": {
+        "col": 0,
+        "row": 5,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n5_1",
+      "position": {
+        "col": 1,
+        "row": 5,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n5_2",
+      "position": {
+        "col": 2,
+        "row": 5,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n5_3",
+      "position": {
+        "col": 3,
+        "row": 5,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n6_0",
+      "position": {
+        "col": 0,
+        "row": 6,
+      },
+      "type": "gate",
+    },
+    {
+      "id": "n6_2",
+      "position": {
+        "col": 2,
+        "row": 6,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n6_3",
+      "position": {
+        "col": 3,
+        "row": 6,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n6_4",
+      "position": {
+        "col": 4,
+        "row": 6,
+      },
+      "type": "step",
+    },
+    {
+      "id": "n7_0",
+      "position": {
+        "col": 0,
+        "row": 7,
+      },
+      "type": "final",
+    },
+    {
+      "id": "n7_1",
+      "position": {
+        "col": 1,
+        "row": 7,
+      },
+      "type": "final",
+    },
+    {
+      "id": "n7_2",
+      "position": {
+        "col": 2,
+        "row": 7,
+      },
+      "type": "final",
+    },
+    {
+      "id": "n7_3",
+      "position": {
+        "col": 3,
+        "row": 7,
+      },
+      "type": "final",
+    },
+  ],
+  "seed": 42,
+  "smfVersion": "0.1",
+}
+`;

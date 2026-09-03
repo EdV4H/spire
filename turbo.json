@@ -1,5 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalPassThroughEnv": ["TMPDIR", "TMP", "TEMP"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],

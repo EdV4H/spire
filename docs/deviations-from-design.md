@@ -1,0 +1,88 @@
+# 設計書 v0.1 からの差分
+
+作成日: 2026-09-03
+対象: `docs/design-v0.1.md`
+
+実装時に設計書と変えた点だけを記録する。理由のない差分は無い。設計書側は歴史的資料としてそのまま残し、**現在の仕様はこのファイルと各パッケージの README が上書きする**。
+
+---
+
+## 1. パッケージ名前空間: `@spire/*` → `@edv4h/spire-*`
+
+`@spire` は未取得の npm スコープ。既存の `@edv4h` スコープ（usketch と同じ）に揃えた。ディレクトリは短縮名（`packages/core`）、パッケージ名はフルプレフィクス（`@edv4h/spire-core`）で統一する。
+
+## 2. `@edv4h/spire-layout` を切った（オープン論点4の決着）
+
+グリッド座標→画面座標の変換・ジッター・ベジェ経路生成を独立パッケージにした。React レンダラと `renderToSVG` が**同一のレイアウト計算**を共有する必要があり（シェア画像が画面と食い違うのは最悪の壊れ方）、両者の共通の下流に置くのが唯一の破綻しない配置だったため。
+
+## 3. プラグインシステムを追加した（最大の差分）
+
+設計書は「カスタムルールは述語関数として注入可能」「ProgressionPolicy はカスタム述語」と書きつつ、同じ 4.2 節で「この GenSpec 全体がテーマとしてシリアライズ可能 = Scenario テンプレートの実体」とも書いている。**関数注入とシリアライズ可能性は両立しない。**
+
+実装ではこれを次のように解いた:
+
+- 仕様（GenSpec・`complete` の引数・MapDocument）は**文字列 ID しか持たない**
+- ID → 実装の解決は**レジストリ**が行い、レジストリへの登録はプラグインが行う
+- 結果として GenSpec は 100% JSON のまま、振る舞いは無制限に差し替えられる
+
+`@edv4h/spire-core` がプラグインカーネル（`createSpire`）と4つのレジストリ（nodeTypes / validators / policies / migrations）＋ services / events を持ち、`@edv4h/spire-gen` が自前の4つ（rules / skeletons / assigners / contentProviders）を service 経由で提供する。カーネルは生成の概念を一切知らない。
+
+設計は `~/Projects/usketch` のプラグインシステムを下敷きにしている。詳細と、意図的に変えた点は `docs/plugin-system.md` を参照。
+
+述語関数を直接渡す道も残してある（`complete(..., { policy: (ctx) => ... })`）。ただしそれは呼び出し時だけの選択肢で、保存される仕様には入らない。
+
+## 4. `fixedRow` を双方向の制約にした
+
+設計書の GenSpec 例:
+
+```jsonc
+"distribution": { "step": 0.7, "gate": 0.2, "bonus": 0.1 },
+"constraints": [ { "rule": "fixedRow", "row": -1, "type": "final" } ]
+```
+
+`final` が distribution に無い。「最終行は final」を片方向のフィルタとして実装すると、`final` は候補プールに存在せず**この例はそのまま充足不能になる**。かといって distribution に `final` を足すと、今度はマップ全体に final が散る。
+
+そこで:
+
+- `fixedRow` は「その行はその型」**かつ**「その型はその行だけ」の双方向制約にした
+- `ConstraintRule` に `contributesTypes()` を足し、ルール自身が候補プールに型を持ち込めるようにした（`fixedRow` は自分の `type` を持ち込む）
+
+これで設計書の例が**書かれたとおりに**動く。
+
+## 5. `branchDistinct` に `exempt` を足した
+
+`fixedRow: -1` と `branchDistinct` は、設計書の例が並べている最も自然な組み合わせだが、終端行で2本の経路が合流すると衝突する（終端行は全部 `final` なので「兄弟は異なる型」が矛盾する）。ASCII ビューアで最初に生成した瞬間に踏んだ。
+
+`{ "rule": "branchDistinct", "exempt": ["final"] }` と書けるようにした。ゴールは「選択肢」ではないので、除外する側が正しい。
+
+## 6. 組み込みルールに `maxPerRow` を足した
+
+設計書の5ルールのうち `fixedRow` / `minRow` / `noAdjacentSame` / `branchDistinct` はそのまま実装。5つめとして `maxPerRow`（1行あたりの同型上限）を足した。行のリズムを制御する最小の道具で、これが無いと同型が横並びになる。
+
+## 7. エラーを投げずに `Result` で返す
+
+設計書のシグネチャは `Result` を使っているが、プラグイン周りは規定が無かった。SDK 全体で統一した:
+
+- `createSpire` は `Result<Spire, PluginError[]>` を返す（usketch は throw してアプリ生成ごと落とす）
+- `destroy()` は teardown の失敗を配列で返す
+- `EventBus.emit` はハンドラが投げた例外を配列で返す
+- **どこでもログを出さない。** ヘッドレス SDK が stdout を汚さない
+
+## 8. 不変条件を1つ足した: `edge_through_node`
+
+設計書の位相的不変条件は4項目。「エッジの描画線分が交差しない」に加えて、**エッジが第三のノードのセルを貫通する**ケースを別コードで検出するようにした。交差はしていないが描画は破綻するため。
+
+## 9. 割当の早期打ち切り
+
+設計書は「rejection sampling に試行上限」とだけ書いている。実装では上限 1000 に加えて、**同じノードが同じ理由で25回連続ブロックされたら打ち切る**。骨格は試行間で変わらない（変わるのは型の抽選だけ）ので、同一の失敗が繰り返されるのは制約が矛盾している強い証拠であり、1000回待たせる理由がない。
+
+## 10. v0.1 で未実装のもの
+
+設計書に書かれているが、このリリースには**入っていない**:
+
+- `regenerate(map, spec, { keepCompleted })` — 4.4節
+- `insertNode` — 4.4節
+- `paths()` は実装済みだが、上限付き（`{ limit }`、既定 10,000）で `{ paths, truncated }` を返す
+- `@edv4h/spire-render` の React コンポーネント・`renderToSVG` / `renderToPNG` — 型とデフォルトテーマのみ
+
+`@edv4h/spire-render` の README に同じことを書いてある。未実装のものを「ある」と読める形で書かない、が方針。
