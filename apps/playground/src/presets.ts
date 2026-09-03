@@ -19,11 +19,11 @@ export const presets: readonly Preset[] = [
 	{
 		id: "basic",
 		label: "基本",
-		note: "組み込みルールのみ。プラグインなしで動く最小の spec。",
+		note: "組み込みルールのみ。始端・終端の既定は1つずつなので、skeleton には何も書かなくてよい。",
 		requires: [],
 		spec: {
 			seed: 42,
-			skeleton: { grid: { cols: 5, rows: 12 }, walks: 4, minStarts: 2 },
+			skeleton: { grid: { cols: 5, rows: 12 }, walks: 4 },
 			types: {
 				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },
 				constraints: [
@@ -67,18 +67,17 @@ export const presets: readonly Preset[] = [
 		},
 	},
 	{
-		id: "summit",
-		label: "始端も終端も1つ",
-		note: "minStarts=maxStarts=1 で入口を1つに、maxEnds=1 で全経路を1つのゴールへ絞る。目標マップの形。",
+		id: "many-ends",
+		label: "入口も出口も複数",
+		note: "既定の逆。minStarts=3 で入口を3つに、maxEnds=null で終端の絞り込みを外す。",
 		requires: [],
 		spec: {
 			seed: 42,
 			skeleton: {
 				grid: { cols: 5, rows: 12 },
 				walks: 6,
-				minStarts: 1,
-				maxStarts: 1,
-				maxEnds: 1,
+				minStarts: 3,
+				maxEnds: null,
 			},
 			types: {
 				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },

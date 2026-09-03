@@ -32,9 +32,9 @@ function parseArgs(argv: readonly string[]): Args {
 		cols: 5,
 		rows: 12,
 		walks: 4,
-		minStarts: 2,
-		maxStarts: 0,
-		maxEnds: 0,
+		minStarts: 1,
+		maxStarts: 1,
+		maxEnds: 1,
 	};
 	const args = { ...defaults };
 
@@ -114,8 +114,8 @@ async function main(): Promise<void> {
 				grid: { cols: args.cols, rows: args.rows },
 				walks: args.walks,
 				minStarts: args.minStarts,
-				...(args.maxStarts > 0 ? { maxStarts: args.maxStarts } : {}),
-				...(args.maxEnds > 0 ? { maxEnds: args.maxEnds } : {}),
+				maxStarts: args.maxStarts > 0 ? args.maxStarts : null,
+				maxEnds: args.maxEnds > 0 ? args.maxEnds : null,
 			},
 			types: {
 				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },

@@ -28,7 +28,43 @@ function countOnRow(nodes: readonly { position: { row: number } }[], row: number
 	return nodes.filter((node) => node.position.row === row).length;
 }
 
+describe("sts-walks — defaults", () => {
+	it("gives a map one beginning and one finish when the spec says nothing", async () => {
+		const result = await generate({
+			seed: 42,
+			skeleton: { grid: { cols: 5, rows: 10 }, walks: 5 },
+			types: {
+				distribution: { step: 1 },
+				constraints: [{ rule: "fixedRow", row: -1, type: "final" }],
+			},
+		});
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(countOnRow(result.value.nodes, 0)).toBe(1);
+		expect(countOnRow(result.value.nodes, result.value.grid.rows - 1)).toBe(1);
+	});
+});
+
 describe("sts-walks — starts", () => {
+	it("pins the count to minStarts when no cap is given", async () => {
+		// A floor without a ceiling means "this many" — not "at least this many,
+		// and however many more the walks happen to open".
+		const result = await generate(specWith({ minStarts: 3 }));
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(countOnRow(result.value.nodes, 0)).toBe(3);
+	});
+
+	it("lifts the cap only for an explicit null", async () => {
+		const result = await generate(specWith({ minStarts: 2, maxStarts: null, walks: 6 }));
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(countOnRow(result.value.nodes, 0)).toBeGreaterThan(2);
+	});
+
 	it("caps the number of entry columns", async () => {
 		const result = await generate(specWith({ minStarts: 1, maxStarts: 1 }));
 
@@ -73,13 +109,15 @@ describe("sts-walks — ends", () => {
 		expect(countOnRow(result.value.nodes, result.value.grid.rows - 1)).toBe(1);
 	});
 
-	it("leaves the terminal row unconstrained by default", async () => {
-		const capped = await generate(specWith({ maxEnds: 1 }));
-		const free = await generate(specWith({}));
+	it("funnels by default, and only null lifts the cap", async () => {
+		const byDefault = await generate(specWith({}));
+		const uncapped = await generate(specWith({ maxEnds: null }));
 
-		expect(capped.ok && free.ok).toBe(true);
-		if (!capped.ok || !free.ok) return;
-		expect(countOnRow(free.value.nodes, free.value.grid.rows - 1)).toBeGreaterThan(1);
+		expect(byDefault.ok && uncapped.ok).toBe(true);
+		if (!byDefault.ok || !uncapped.ok) return;
+
+		expect(countOnRow(byDefault.value.nodes, byDefault.value.grid.rows - 1)).toBe(1);
+		expect(countOnRow(uncapped.value.nodes, uncapped.value.grid.rows - 1)).toBeGreaterThan(1);
 	});
 
 	it("respects a wider landing block", async () => {

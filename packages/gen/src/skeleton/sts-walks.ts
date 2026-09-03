@@ -29,8 +29,10 @@ const paramsSchema = z.looseObject({
 	grid: z.looseObject({ cols: z.int().positive(), rows: z.int().positive() }),
 	walks: z.int().positive(),
 	minStarts: z.int().positive(),
-	maxStarts: z.int().positive().optional(),
-	maxEnds: z.int().positive().optional(),
+	// `undefined` pins the count to `minStarts`; `null` means no cap.
+	maxStarts: z.int().positive().nullish(),
+	// `null` and `undefined` both mean no cap.
+	maxEnds: z.int().positive().nullish(),
 	connectivity: z.literal("closest3"),
 });
 
@@ -68,7 +70,7 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 					meta: { minStarts: params.minStarts, walks: params.walks, cols },
 				});
 			}
-			if (params.maxStarts !== undefined && params.maxStarts < params.minStarts) {
+			if (typeof params.maxStarts === "number" && params.maxStarts < params.minStarts) {
 				return err({
 					code: "impossible" as const,
 					message: `maxStarts ${params.maxStarts} is below minStarts ${params.minStarts}.`,
@@ -76,10 +78,15 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 				});
 			}
 
+			// `null` is the explicit "no cap"; omitting it pins the count to the
+			// floor, which is what asking for a floor almost always means.
+			const maxStarts =
+				params.maxStarts === null ? undefined : (params.maxStarts ?? params.minStarts);
+
 			return ok(
 				walk(params.grid, params.walks, params.minStarts, rng, {
-					...(params.maxStarts === undefined ? {} : { maxStarts: params.maxStarts }),
-					...(params.maxEnds === undefined ? {} : { maxEnds: params.maxEnds }),
+					...(maxStarts === undefined ? {} : { maxStarts }),
+					...(params.maxEnds == null ? {} : { maxEnds: params.maxEnds }),
 				}),
 			);
 		},

@@ -24,21 +24,32 @@ export const skeletonSpecSchema = z.looseObject({
 	}),
 	/** Number of walks from top to bottom. More walks means denser branching. */
 	walks: z.int().positive().default(4),
-	/** Minimum number of distinct entry columns on row 0. */
-	minStarts: z.int().positive().default(2),
 	/**
-	 * Maximum number of distinct entry columns. Omit for no cap; set it equal to
-	 * `minStarts` to pin the count, and both to 1 for a single starting node.
+	 * Minimum number of distinct entry columns on row 0.
+	 *
+	 * Defaults to one: a map has one beginning unless it says otherwise.
 	 */
-	maxStarts: z.int().positive().optional(),
+	minStarts: z.int().positive().default(1),
 	/**
-	 * Maximum number of distinct nodes on the terminal row. Omit for no cap; set
-	 * to 1 to funnel every route into a single finish.
+	 * Maximum number of distinct entry columns.
+	 *
+	 * - **Omitted** — the count is pinned to `minStarts`. Asking for a floor
+	 *   without a ceiling almost always means "this many", and it keeps a spec
+	 *   that only sets `minStarts` from silently getting more.
+	 * - **A number** — the count lands in `[minStarts, maxStarts]`.
+	 * - **`null`** — no cap; extra walks may open lanes of their own.
+	 */
+	maxStarts: z.int().positive().nullish(),
+	/**
+	 * Maximum number of distinct nodes on the terminal row. `null` for no cap.
+	 *
+	 * Defaults to one, so every route ends at the same place unless the spec
+	 * asks for several finishes.
 	 *
 	 * Enforced by narrowing the columns a walk may occupy as it approaches the
 	 * end, so the funnel cannot introduce a crossing.
 	 */
-	maxEnds: z.int().positive().optional(),
+	maxEnds: z.int().positive().nullable().default(1),
 	/** Which columns a walk may step to next. */
 	connectivity: z.literal("closest3").default("closest3"),
 });
