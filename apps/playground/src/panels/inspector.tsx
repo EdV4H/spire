@@ -8,6 +8,7 @@ import {
 } from "@edv4h/spire-core";
 import { getGenRegistries } from "@edv4h/spire-gen";
 import type { ReactElement } from "react";
+import { NodeTypes } from "./node-types.js";
 
 interface Props {
 	spire: Spire | undefined;
@@ -56,6 +57,8 @@ export function Inspector({ spire, map, state, selectedNodeId }: Props): ReactEl
 					</dl>
 				</div>
 			)}
+
+			<NodeTypes spire={spire} map={map} />
 
 			{validation !== undefined && (
 				<div className="block">

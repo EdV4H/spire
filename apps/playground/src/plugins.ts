@@ -53,6 +53,43 @@ function createInlineDemoPlugin(): SpirePlugin {
 	};
 }
 
+/**
+ * Definitions for the vocabulary the presets use.
+ *
+ * Declaring a type in `map.nodeTypes` is all the format requires; registering a
+ * `NodeTypeDefinition` on top is optional and is what gives a type a label and,
+ * where a host wants one, a schema for `node.data`. Registering them here keeps
+ * the inspector's three layers all populated, so the difference between
+ * "declared", "defined" and "styled" is visible rather than described.
+ *
+ * No `dataSchema` on purpose: attaching one would make every map without
+ * matching `node.data` fail validation, which is a surprising default for a
+ * playground. `examples/acme-plugin-demo` shows that path.
+ */
+function createNodeTypesPlugin(): SpirePlugin {
+	const labels: Record<string, string> = {
+		step: "ステップ",
+		gate: "チェックポイント",
+		bonus: "ボーナス",
+		boss: "山場",
+		final: "ゴール",
+	};
+
+	return {
+		id: "playground:node-types",
+		name: "Node type definitions",
+		apiVersion: SPIRE_PLUGIN_API_VERSION,
+		setup(ctx) {
+			const offs = Object.entries(labels).map(([id, label]) =>
+				ctx.nodeTypes.register({ id, meta: { label } }),
+			);
+			return () => {
+				for (const off of offs.reverse()) off();
+			};
+		},
+	};
+}
+
 export interface PluginEntry {
 	id: string;
 	label: string;
@@ -78,6 +115,13 @@ export const availablePlugins: readonly PluginEntry[] = [
 		create: () => createRulesExtraPlugin(),
 	},
 	{
+		id: "node-types",
+		label: "playground:node-types",
+		note: "step / gate / bonus / boss / final に定義とラベルを与える。外すと nodeTypes レジストリが空になる。",
+		requires: [],
+		create: () => createNodeTypesPlugin(),
+	},
+	{
 		id: "policy-quorum",
 		label: "@edv4h/spire-plugin-policy-quorum",
 		note: "「N 本の経路が合流したら開く」ポリシー。合流ノードで効き方が変わる。",
@@ -93,4 +137,4 @@ export const availablePlugins: readonly PluginEntry[] = [
 	},
 ];
 
-export const defaultEnabled = ["gen", "rules-extra", "policy-quorum", "inline"];
+export const defaultEnabled = ["gen", "rules-extra", "node-types", "policy-quorum", "inline"];
