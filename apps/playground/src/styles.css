@@ -11,6 +11,7 @@
 	--muted: #6c7683;
 	--line: #dfe4ea;
 	--accent: #2f4bd0;
+	--accent-soft: #eaeefb;
 	--error: #b91c1c;
 	--warn: #b45309;
 	--ok: #15803d;
@@ -85,6 +86,16 @@ body {
 	flex-direction: column;
 	gap: 10px;
 	min-width: 0;
+	min-height: 0;
+}
+
+/* A panel that owns a whole pane fills it and scrolls its own overflow. */
+.split-pane > .panel {
+	height: 100%;
+	overflow-y: auto;
+}
+.split-pane > .panel--fill {
+	overflow: hidden;
 }
 
 .panel h2 {
@@ -182,7 +193,10 @@ select {
 
 .editor {
 	width: 100%;
-	resize: vertical;
+	/* The pane is the resize handle now, so the textarea just fills it. */
+	resize: none;
+	flex: 1;
+	min-height: 80px;
 	padding: 10px;
 	border: 1px solid var(--line);
 	border-radius: 4px;
@@ -276,7 +290,8 @@ select {
 	border: 1px solid var(--line);
 	border-radius: 4px;
 	overflow: auto;
-	max-height: 70vh;
+	flex: 1;
+	min-height: 0;
 	display: flex;
 	justify-content: center;
 	padding: 8px;

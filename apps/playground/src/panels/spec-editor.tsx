@@ -23,7 +23,7 @@ export function SpecEditor({
 	const active = presets.find((preset) => preset.id === presetId);
 
 	return (
-		<section className="panel">
+		<section className="panel panel--fill">
 			<h2>GenSpec</h2>
 			<p className="hint">
 				振る舞いはすべて文字列 ID で参照する。ここに関数は入らないので、この JSON は
@@ -49,7 +49,6 @@ export function SpecEditor({
 				spellCheck={false}
 				value={text}
 				onChange={(event) => onText(event.target.value)}
-				rows={18}
 			/>
 
 			{parseError !== undefined && (

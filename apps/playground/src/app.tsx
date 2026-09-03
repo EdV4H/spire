@@ -15,6 +15,7 @@ import { Inspector } from "./panels/inspector.js";
 import { MapView, type Transition, type ViewSettings } from "./panels/map-view.js";
 import { PluginList } from "./panels/plugin-list.js";
 import { SpecEditor } from "./panels/spec-editor.js";
+import { SplitColumn } from "./panels/split-column.js";
 import { defaultEnabled } from "./plugins.js";
 import { defaultPreset, type Preset, presets } from "./presets.js";
 import { playgroundTheme } from "./theme.js";
@@ -177,34 +178,45 @@ export function App(): ReactElement {
 			</header>
 
 			<aside className="column column--left">
-				<PluginList
-					enabled={enabled}
-					onToggle={(id) =>
-						setEnabled((current) =>
-							current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-						)
+				<SplitColumn
+					label="プラグインと GenSpec の高さ"
+					top={
+						<PluginList
+							enabled={enabled}
+							onToggle={(id) =>
+								setEnabled((current) =>
+									current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+								)
+							}
+							spire={spire}
+							errors={pluginErrors}
+						/>
 					}
-					spire={spire}
-					errors={pluginErrors}
-				/>
-
-				<SpecEditor
-					presetId={presetId}
-					onPreset={(preset: Preset) => {
-						setPresetId(preset.id);
-						setSpecText(JSON.stringify(preset.spec, null, 2));
-						setEnabled((current) => [
-							...new Set([...current, ...preset.requires.filter((id) => !current.includes(id))]),
-						]);
-					}}
-					text={specText}
-					onText={(text) => {
-						setSpecText(text);
-						setPresetId(presets.find((p) => JSON.stringify(p.spec, null, 2) === text)?.id ?? "");
-					}}
-					parseError={parsed.error}
-					onGenerate={() => void runGenerate()}
-					busy={busy || loading}
+					bottom={
+						<SpecEditor
+							presetId={presetId}
+							onPreset={(preset: Preset) => {
+								setPresetId(preset.id);
+								setSpecText(JSON.stringify(preset.spec, null, 2));
+								setEnabled((current) => [
+									...new Set([
+										...current,
+										...preset.requires.filter((id) => !current.includes(id)),
+									]),
+								]);
+							}}
+							text={specText}
+							onText={(text) => {
+								setSpecText(text);
+								setPresetId(
+									presets.find((p) => JSON.stringify(p.spec, null, 2) === text)?.id ?? "",
+								);
+							}}
+							parseError={parsed.error}
+							onGenerate={() => void runGenerate()}
+							busy={busy || loading}
+						/>
+					}
 				/>
 			</aside>
 
