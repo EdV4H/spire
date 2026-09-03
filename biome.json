@@ -15,7 +15,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"preset": "recommended"
 		}
 	},
 	"formatter": {
@@ -24,7 +24,14 @@
 		"lineWidth": 100
 	},
 	"files": {
-		"includes": ["packages/**", "plugins/**", "examples/**", "biome.json", "turbo.json"],
-		"experimentalScannerIgnores": ["**/dist/**", "**/node_modules/**"]
+		"includes": [
+			"packages/**",
+			"plugins/**",
+			"examples/**",
+			"biome.json",
+			"turbo.json",
+			"!!**/dist",
+			"!!**/node_modules"
+		]
 	}
 }
