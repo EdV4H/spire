@@ -1,4 +1,11 @@
-import { type PointerEvent, type ReactNode, useCallback, useRef, useState } from "react";
+import {
+	type CSSProperties,
+	type PointerEvent,
+	type ReactNode,
+	useCallback,
+	useRef,
+	useState,
+} from "react";
 
 interface Props {
 	top: ReactNode;
@@ -58,10 +65,15 @@ export function SplitColumn({ top, bottom, initial = 46, min = 15, max = 85, lab
 	};
 
 	return (
-		<div className="split" ref={containerRef}>
-			<div className="split-pane" style={{ height: `${ratio}%` }}>
-				{top}
-			</div>
+		// The ratio travels as a custom property rather than an inline height, so
+		// the narrow-screen rules can drop back to auto without fighting inline
+		// specificity.
+		<div
+			className="split"
+			ref={containerRef}
+			style={{ "--split-top": `${ratio}%` } as CSSProperties}
+		>
+			<div className="split-pane split-pane--top">{top}</div>
 
 			{/* biome-ignore lint/a11y/useSemanticElements: an <hr> cannot be focused or
 			    dragged. A focusable separator is the ARIA window-splitter pattern. */}
