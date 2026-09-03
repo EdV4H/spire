@@ -1,0 +1,30 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"files": {
+		"includes": ["packages/**", "plugins/**", "examples/**", "biome.json", "turbo.json"],
+		"experimentalScannerIgnores": ["**/dist/**", "**/node_modules/**"]
+	}
+}

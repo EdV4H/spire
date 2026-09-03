@@ -1,0 +1,46 @@
+{
+	"name": "@edv4h/spire-core",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Spire Map Format types, validation, progression state machine and plugin kernel",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"source": "./src/index.ts",
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run --passWithNoTests",
+		"clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+	},
+	"dependencies": {
+		"zod": "4.4.3"
+	},
+	"devDependencies": {
+		"fast-check": "4.4.0",
+		"typescript": "7.0.2",
+		"vitest": "4.1.11"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/EdV4H/spire.git",
+		"directory": "packages/core"
+	},
+	"homepage": "https://github.com/EdV4H/spire#readme",
+	"bugs": {
+		"url": "https://github.com/EdV4H/spire/issues"
+	}
+}

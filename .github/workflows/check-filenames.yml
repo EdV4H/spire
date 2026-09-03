@@ -1,0 +1,32 @@
+name: Check Filename Convention
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  check-filenames:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check kebab-case filenames (TypeScript)
+        run: |
+          echo "Checking for non-kebab-case TypeScript filenames..."
+          bad_files=$(find . -type f \( -name "*.ts" -o -name "*.tsx" \) \
+            ! -path "*/node_modules/*" \
+            ! -path "*/dist/*" \
+            ! -path "*/.git/*" \
+            | while read -r file; do
+                basename=$(basename "$file" | sed 's/\.\(ts\|tsx\)$//')
+                if echo "$basename" | grep -qE '[A-Z_]'; then
+                  echo "$file"
+                fi
+              done)
+          if [ -n "$bad_files" ]; then
+            echo "Non-kebab-case filenames found:"
+            echo "$bad_files"
+            exit 1
+          fi
+          echo "All TypeScript filenames follow kebab-case convention."

@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "plugins/*"
+  - "examples/*"
+
+onlyBuiltDependencies:
+  - "@j178/prek"
