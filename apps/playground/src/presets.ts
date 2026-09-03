@@ -67,6 +67,30 @@ export const presets: readonly Preset[] = [
 		},
 	},
 	{
+		id: "summit",
+		label: "始端も終端も1つ",
+		note: "minStarts=maxStarts=1 で入口を1つに、maxEnds=1 で全経路を1つのゴールへ絞る。目標マップの形。",
+		requires: [],
+		spec: {
+			seed: 42,
+			skeleton: {
+				grid: { cols: 5, rows: 12 },
+				walks: 6,
+				minStarts: 1,
+				maxStarts: 1,
+				maxEnds: 1,
+			},
+			types: {
+				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },
+				constraints: [
+					{ rule: "fixedRow", row: -1, type: "final" },
+					{ rule: "minRow", type: "gate", row: 2 },
+				],
+			},
+			populate: null,
+		},
+	},
+	{
 		id: "rules-extra",
 		label: "追加ルール",
 		note: "rules-extra プラグインの maxTotal / rowRange / afterTypes を使う。プラグインを外すと unknown rule で落ちる。",

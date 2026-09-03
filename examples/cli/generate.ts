@@ -20,10 +20,22 @@ interface Args {
 	rows: number;
 	walks: number;
 	minStarts: number;
+	maxStarts: number;
+	maxEnds: number;
 }
 
 function parseArgs(argv: readonly string[]): Args {
-	const defaults: Args = { seed: 42, count: 1, cols: 5, rows: 12, walks: 4, minStarts: 2 };
+	// 0 means "no cap", which is how the flags stay plain numbers.
+	const defaults: Args = {
+		seed: 42,
+		count: 1,
+		cols: 5,
+		rows: 12,
+		walks: 4,
+		minStarts: 2,
+		maxStarts: 0,
+		maxEnds: 0,
+	};
 	const args = { ...defaults };
 
 	for (let i = 0; i < argv.length; i += 2) {
@@ -102,6 +114,8 @@ async function main(): Promise<void> {
 				grid: { cols: args.cols, rows: args.rows },
 				walks: args.walks,
 				minStarts: args.minStarts,
+				...(args.maxStarts > 0 ? { maxStarts: args.maxStarts } : {}),
+				...(args.maxEnds > 0 ? { maxEnds: args.maxEnds } : {}),
 			},
 			types: {
 				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },

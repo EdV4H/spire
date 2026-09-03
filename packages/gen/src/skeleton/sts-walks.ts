@@ -29,6 +29,8 @@ const paramsSchema = z.looseObject({
 	grid: z.looseObject({ cols: z.int().positive(), rows: z.int().positive() }),
 	walks: z.int().positive(),
 	minStarts: z.int().positive(),
+	maxStarts: z.int().positive().optional(),
+	maxEnds: z.int().positive().optional(),
 	connectivity: z.literal("closest3"),
 });
 
@@ -66,10 +68,27 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 					meta: { minStarts: params.minStarts, walks: params.walks, cols },
 				});
 			}
+			if (params.maxStarts !== undefined && params.maxStarts < params.minStarts) {
+				return err({
+					code: "impossible" as const,
+					message: `maxStarts ${params.maxStarts} is below minStarts ${params.minStarts}.`,
+					meta: { minStarts: params.minStarts, maxStarts: params.maxStarts },
+				});
+			}
 
-			return ok(walk(params.grid, params.walks, params.minStarts, rng));
+			return ok(
+				walk(params.grid, params.walks, params.minStarts, rng, {
+					...(params.maxStarts === undefined ? {} : { maxStarts: params.maxStarts }),
+					...(params.maxEnds === undefined ? {} : { maxEnds: params.maxEnds }),
+				}),
+			);
 		},
 	};
+}
+
+interface Funnel {
+	maxStarts?: number;
+	maxEnds?: number;
 }
 
 function walk(
@@ -77,27 +96,38 @@ function walk(
 	walks: number,
 	minStarts: number,
 	rng: Rng,
+	funnel: Funnel,
 ): Skeleton {
 	const { cols, rows } = grid;
+	const terminalRow = rows - 1;
+
 	// Steps already taken between row r and r+1, used for crossing rejection.
 	const stepsByRow: Step[][] = Array.from({ length: rows - 1 }, () => []);
 	const occupied = new Set<string>();
 	const edgeKeys = new Set<string>();
 	const edges: SkeletonEdge[] = [];
 
-	const startColumns = chooseStarts(cols, walks, minStarts, rng);
+	const landing = chooseLanding(cols, walks, funnel.maxEnds, rng);
+	const startColumns = chooseStarts(cols, walks, minStarts, funnel.maxStarts, rng);
 
 	for (const startCol of startColumns) {
 		let col = startCol;
 		occupied.add(key(col, 0));
 
-		for (let row = 0; row < rows - 1; row++) {
+		for (let row = 0; row < terminalRow; row++) {
 			const steps = stepsByRow[row] ?? [];
-			const candidates = candidateColumns(col, cols).filter((next) => !crosses(steps, col, next));
+			const window = allowedWindow(landing, terminalRow, row + 1, cols);
 
-			// `col` itself is always a candidate and never crosses anything, so
-			// this cannot be empty; the fallback is defensive only.
-			const nextCol = rng.pick(candidates) ?? col;
+			const inWindow = candidateColumns(col, cols).filter(
+				(next) => next >= window.lo && next <= window.hi,
+			);
+			const candidates = inWindow.filter((next) => !crosses(steps, col, next));
+
+			// Both filters are always satisfiable together: the window narrows by
+			// at most one column per row, so a walk is never forced to move in a
+			// direction that would invert its order against another walk. The
+			// fallbacks below are defensive only.
+			const nextCol = rng.pick(candidates) ?? inWindow[0] ?? col;
 
 			steps.push({ fromCol: col, toCol: nextCol });
 			occupied.add(key(nextCol, row + 1));
@@ -129,14 +159,85 @@ function walk(
 }
 
 /**
- * Entry columns for the walks. The first `minStarts` walks are forced onto
- * distinct columns so a map cannot degenerate into a single entry point; the
- * rest are free to reuse one, which is what produces an early merge.
+ * The contiguous block of columns the walks are allowed to finish in.
+ *
+ * A single block rather than scattered targets, because the funnel is enforced
+ * as one widening interval that every walk shares — which is what makes it
+ * impossible for the funnel to force two walks to swap sides and cross. With
+ * `maxEnds: 1` the block is one column and every route ends on the same node.
  */
-function chooseStarts(cols: number, walks: number, minStarts: number, rng: Rng): number[] {
-	const distinct = rng.shuffle(range(cols)).slice(0, Math.min(minStarts, cols));
-	const rest = Array.from({ length: Math.max(0, walks - distinct.length) }, () => rng.int(cols));
-	return [...distinct, ...rest];
+function chooseLanding(
+	cols: number,
+	walks: number,
+	maxEnds: number | undefined,
+	rng: Rng,
+): { lo: number; hi: number } {
+	if (maxEnds === undefined) return { lo: 0, hi: cols - 1 };
+
+	const width = Math.max(1, Math.min(maxEnds, cols, walks));
+	const lo = rng.int(cols - width + 1);
+	return { lo, hi: lo + width - 1 };
+}
+
+/**
+ * Columns reachable at `row` while still being able to land inside the block.
+ *
+ * A step moves at most one column, so a walk at row `r` can still reach the
+ * block if it is within `terminalRow - r` columns of it. Applying that as a
+ * hard filter funnels the walks in without any extra bookkeeping — and because
+ * the interval is the same for every walk, it preserves their left-to-right
+ * order.
+ */
+function allowedWindow(
+	landing: { lo: number; hi: number },
+	terminalRow: number,
+	row: number,
+	cols: number,
+): { lo: number; hi: number } {
+	const slack = terminalRow - row;
+	return {
+		lo: Math.max(0, landing.lo - slack),
+		hi: Math.min(cols - 1, landing.hi + slack),
+	};
+}
+
+/**
+ * Entry columns for the walks.
+ *
+ * `minStarts` distinct columns are forced so a map cannot degenerate into a
+ * single entry point by accident; `maxStarts` caps it so a map can be made to
+ * have one on purpose. Walks beyond the distinct set reuse one of the columns
+ * already chosen — not a fresh random column, which would quietly break the
+ * cap.
+ */
+function chooseStarts(
+	cols: number,
+	walks: number,
+	minStarts: number,
+	maxStarts: number | undefined,
+	rng: Rng,
+): number[] {
+	if (maxStarts === undefined) {
+		// Uncapped: walks past the floor pick freely, which is how a map ends up
+		// with more entry points than the minimum asked for. Left untouched so a
+		// spec without the cap keeps producing the same map from the same seed.
+		const distinct = rng.shuffle(range(cols)).slice(0, Math.min(minStarts, cols));
+		const rest = Array.from({ length: Math.max(0, walks - distinct.length) }, () => rng.int(cols));
+		return [...distinct, ...rest];
+	}
+
+	const ceiling = Math.min(maxStarts, cols, walks);
+	const floor = Math.min(minStarts, ceiling);
+	const distinctCount = floor + rng.int(ceiling - floor + 1);
+
+	const chosen = rng.shuffle(range(cols)).slice(0, distinctCount);
+	// Extra walks reuse a lane that is already open — drawing a fresh column
+	// here is exactly what would break the cap.
+	const rest = Array.from(
+		{ length: Math.max(0, walks - chosen.length) },
+		() => chosen[rng.int(chosen.length)] ?? 0,
+	);
+	return [...chosen, ...rest];
 }
 
 function candidateColumns(col: number, cols: number): number[] {

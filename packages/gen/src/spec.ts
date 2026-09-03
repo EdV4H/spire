@@ -26,6 +26,19 @@ export const skeletonSpecSchema = z.looseObject({
 	walks: z.int().positive().default(4),
 	/** Minimum number of distinct entry columns on row 0. */
 	minStarts: z.int().positive().default(2),
+	/**
+	 * Maximum number of distinct entry columns. Omit for no cap; set it equal to
+	 * `minStarts` to pin the count, and both to 1 for a single starting node.
+	 */
+	maxStarts: z.int().positive().optional(),
+	/**
+	 * Maximum number of distinct nodes on the terminal row. Omit for no cap; set
+	 * to 1 to funnel every route into a single finish.
+	 *
+	 * Enforced by narrowing the columns a walk may occupy as it approaches the
+	 * end, so the funnel cannot introduce a crossing.
+	 */
+	maxEnds: z.int().positive().optional(),
 	/** Which columns a walk may step to next. */
 	connectivity: z.literal("closest3").default("closest3"),
 });
