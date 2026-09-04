@@ -22,6 +22,7 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 		jitter,
 		padding,
 		curvature,
+		scale = 1,
 		onNodePress,
 		renderNode,
 		onNodeStatusChange,
@@ -99,8 +100,8 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 			ref={rootRef}
 			className={className}
 			viewBox={`0 0 ${scene.size.width} ${scene.size.height}`}
-			width={scene.size.width}
-			height={scene.size.height}
+			width={round(scene.size.width * scale)}
+			height={round(scene.size.height * scale)}
 			role={onNodePress === undefined ? "img" : "group"}
 			style={scene.background === undefined ? undefined : { background: scene.background }}
 		>
@@ -164,6 +165,10 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 			})}
 		</svg>
 	);
+}
+
+function round(value: number): number {
+	return Math.round(value * 100) / 100;
 }
 
 function defaultNode(node: SceneNode): ReactElement {

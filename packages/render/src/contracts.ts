@@ -14,6 +14,12 @@ export interface SpireMapProps {
 	jitter?: { amount: number; seed?: number };
 	padding?: number;
 	curvature?: number;
+	/**
+	 * Multiplies the drawn size. The `viewBox` keeps the layout's natural size,
+	 * so nothing is laid out again — the same scene is simply drawn larger or
+	 * smaller, which is exactly what `renderToSVG`'s `scale` does. Defaults to 1.
+	 */
+	scale?: number;
 	onNodePress?: (nodeId: NodeId) => void;
 	/**
 	 * Escape hatch: draw a node yourself. Return `undefined` or `null` to fall

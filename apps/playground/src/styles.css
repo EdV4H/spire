@@ -43,25 +43,12 @@ body {
 .layout {
 	display: grid;
 	grid-template-columns: 340px minmax(0, 1fr) 360px;
-	grid-template-rows: auto minmax(0, 1fr);
-	grid-template-areas: "head head head" "left center right";
+	grid-template-rows: minmax(0, 1fr);
+	grid-template-areas: "left center right";
 	gap: 16px;
 	padding: 16px;
 	height: 100dvh;
 	overflow: hidden;
-}
-
-.masthead {
-	grid-area: head;
-	display: flex;
-	align-items: baseline;
-	gap: 16px;
-	flex-wrap: wrap;
-}
-.masthead h1 {
-	margin: 0;
-	font-size: 18px;
-	letter-spacing: -0.01em;
 }
 
 /* `min-height: 0` is what lets a grid child shrink below its content and scroll. */
@@ -348,12 +335,31 @@ select {
 	flex: 1;
 	min-height: 0;
 	display: flex;
-	justify-content: center;
+	/* `safe` keeps the overflow reachable: centring a zoomed-in map the plain
+	   way pushes its left edge out of the scrollable area for good. */
+	justify-content: safe center;
+	align-items: safe center;
 	padding: 8px;
 }
 .canvas svg {
 	display: block;
 }
+.zoom {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: auto;
+}
+.zoom button {
+	min-width: 30px;
+	padding: 4px 8px;
+}
+.zoom__value {
+	min-width: 44px;
+	text-align: center;
+	color: var(--muted);
+}
+
 .empty {
 	color: var(--muted);
 	padding: 48px 0;
@@ -515,7 +521,7 @@ select {
 	.layout {
 		grid-template-columns: 1fr;
 		grid-template-rows: none;
-		grid-template-areas: "head" "left" "center" "right";
+		grid-template-areas: "left" "center" "right";
 		height: auto;
 		min-height: 100dvh;
 		overflow: visible;

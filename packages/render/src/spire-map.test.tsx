@@ -92,4 +92,33 @@ describe("SpireMap", () => {
 		const viewBox = (markup: string) => /viewBox="([^"]+)"/.exec(markup)?.[1];
 		expect(viewBox(html)).toBe(viewBox(svg));
 	});
+
+	it("scales the drawn size without moving anything", () => {
+		const map = diamondMap();
+		const plain = renderToStaticMarkup(<SpireMap map={map} state={state} />);
+		const zoomed = renderToStaticMarkup(<SpireMap map={map} state={state} scale={2} />);
+
+		const attr = (markup: string, name: string) =>
+			new RegExp(`${name}="([^"]+)"`).exec(markup)?.[1];
+
+		expect(Number(attr(zoomed, "width"))).toBe(Number(attr(plain, "width")) * 2);
+		expect(Number(attr(zoomed, "height"))).toBe(Number(attr(plain, "height")) * 2);
+
+		// The scene is untouched: zoom is a drawing concern, so the geometry and
+		// the viewBox must be identical to the unscaled render.
+		expect(attr(zoomed, "viewBox")).toBe(attr(plain, "viewBox"));
+		expect(zoomed.match(/d="([^"]+)"/g)).toEqual(plain.match(/d="([^"]+)"/g));
+	});
+
+	it("agrees with renderToSVG on what a scale means", () => {
+		const map = diamondMap();
+		const html = renderToStaticMarkup(<SpireMap map={map} state={state} scale={1.5} />);
+		const svg = renderToSVG(map, state, { scale: 1.5 });
+
+		const size = (markup: string) => [
+			/width="([^"]+)"/.exec(markup)?.[1],
+			/height="([^"]+)"/.exec(markup)?.[1],
+		];
+		expect(size(html)).toEqual(size(svg));
+	});
 });

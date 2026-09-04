@@ -64,6 +64,7 @@ export function App(): ReactElement {
 		orientation: "bottom-up",
 		jitter: 7,
 		curvature: 0.45,
+		scale: 1,
 	});
 
 	const parsed = useMemo(() => parseSpec(specText), [specText]);
@@ -170,13 +171,6 @@ export function App(): ReactElement {
 
 	return (
 		<div className="layout">
-			<header className="masthead">
-				<h1>Spire Playground</h1>
-				<p className="hint">
-					プラグインと機能を手で触って確かめる場所。UI は意図的に素朴にしてある。
-				</p>
-			</header>
-
 			<aside className="column column--left">
 				<SplitColumn
 					label="プラグインと GenSpec の高さ"
