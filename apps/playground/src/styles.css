@@ -42,7 +42,12 @@ body {
  */
 .layout {
 	display: grid;
-	grid-template-columns: 340px minmax(0, 1fr) 360px;
+	/* The sides resolve to their max whenever there is room, so a wide window
+	   looks exactly as before. Below that they give ground instead of forcing
+	   the whole layout into one column — which needs a floor under the centre
+	   track, since a `minmax(0, 1fr)` centre would sooner shrink to nothing
+	   than make the sides yield a pixel. */
+	grid-template-columns: minmax(240px, 340px) minmax(320px, 1fr) minmax(260px, 360px);
 	grid-template-rows: minmax(0, 1fr);
 	grid-template-areas: "left center right";
 	gap: 16px;
@@ -517,7 +522,7 @@ select {
 
 /* Narrow screens stack and let the page scroll instead: three panes sharing one
    short viewport is worse than one long column. */
-@media (max-width: 1200px) {
+@media (max-width: 900px) {
 	.layout {
 		grid-template-columns: 1fr;
 		grid-template-rows: none;
