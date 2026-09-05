@@ -13,7 +13,7 @@ pnpm --filter @edv4h/spire-playground dev   # http://127.0.0.1:4590
 |---|---|
 | **プラグインの ON/OFF** | `createSpire` を組み直す。gen を切ると rules-extra が `missing_dependency` で落ちるのが見える |
 | **GenSpec の編集** | プリセット6種。「充足不能」を選ぶと、どのノードがどのルールに阻まれたかを名指しするエラーが出る |
-| **進行ポリシーの切替** | `strict` / `free` / `quorum` / `row-order` を選んで同じノードを押すと、拒否のされ方が変わる |
+| **進行ポリシーの切替** | `single-route`（既定）/ `strict` / `free` / `quorum` / `row-order` を選んで同じノードを押すと、拒否のされ方が変わる。分岐を作って片方を通ると、既定では反対側が閉じ、`strict` に変えると開く |
 | **ノードの完了・取り消し** | クリックで `complete` / `uncomplete`。拒否されたら `RuleViolation` がそのまま出る |
 | **CRDT マージ** | 「状態を分岐」→ 別ノードを完了 →「分岐をマージ」で `mergeStates` の結果が入る |
 | **regenerate / insertNode** | 完了済みを保ったまま再割当、空きセルへの挿入。挿入できなければ `no_space` |

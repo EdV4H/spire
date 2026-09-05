@@ -1,8 +1,8 @@
 import type { Spire } from "../plugin/create-spire.js";
-import { BUILTIN_POLICIES } from "../plugin/create-spire.js";
 import type { PolicyContext, ProgressionPolicyDefinition } from "../plugin/plugin.js";
 import { err, ok, type Result } from "../result.js";
 import type { CompletionRecord, MapDocument, NodeId, StateDocument } from "../types.js";
+import { BUILTIN_POLICIES, SINGLE_ROUTE } from "./policies.js";
 import { getNodeStatus } from "./status.js";
 
 /**
@@ -21,7 +21,9 @@ export interface RuleViolation {
 export interface CompleteOptions {
 	/**
 	 * Policy id, a policy definition, or a bare predicate. Defaults to
-	 * `"strict"`: only a reachable node may be completed.
+	 * `"single-route"`: the completed set must stay one unbroken path, so taking
+	 * one arm of a branch costs you the other. Pass `"strict"` to allow every
+	 * arm to be walked, or `"free"` to allow anything.
 	 *
 	 * A string is resolved against `spire.policies`, which is what lets a host's
 	 * configuration name a policy without shipping code for it.
@@ -64,7 +66,10 @@ export function complete(
 	if (!resolved.canComplete(ctx)) {
 		return err({
 			code: "not_allowed",
-			message: `Policy "${resolved.id}" rejects completing "${nodeId}" while it is ${status}.`,
+			// The status is context, not the reason — `single-route` refuses nodes
+			// that are perfectly reachable, and "rejects it while it is reachable"
+			// reads as a contradiction rather than as an explanation.
+			message: `Policy "${resolved.id}" does not allow completing "${nodeId}" (status: ${status}).`,
 			nodeId,
 			meta: { policy: resolved.id, status },
 		});
@@ -82,6 +87,41 @@ export function complete(
 	});
 }
 
+/** The policy half of `CompleteOptions`, for the questions that record nothing. */
+export type PolicyOptions = Pick<CompleteOptions, "policy" | "spire">;
+
+/**
+ * Which nodes `complete` would actually accept right now.
+ *
+ * `getReachableNodes` answers a structural question — who has a completed
+ * predecessor — and stays policy-blind on purpose, because that is what the
+ * renderer styles. This answers the player's question instead, and the two
+ * genuinely differ: under `single-route` the far arm of a branch you already
+ * turned away from is still *reachable*, and no longer *completable*.
+ *
+ * An unregistered policy id yields an empty list rather than an error: nothing
+ * is completable under a policy that does not exist.
+ */
+export function getCompletableNodes(
+	map: MapDocument,
+	state: StateDocument,
+	options: PolicyOptions = {},
+): NodeId[] {
+	const resolved = resolvePolicy(options);
+	if (resolved === undefined) return [];
+
+	return map.nodes
+		.filter((node) =>
+			resolved.canComplete({
+				map,
+				state,
+				nodeId: node.id,
+				status: getNodeStatus(map, state, node.id),
+			}),
+		)
+		.map((node) => node.id);
+}
+
 export function uncomplete(state: StateDocument, nodeId: NodeId): StateDocument {
 	if (state.completed[nodeId] === undefined) return state;
 	const { [nodeId]: _removed, ...rest } = state.completed;
@@ -89,7 +129,7 @@ export function uncomplete(state: StateDocument, nodeId: NodeId): StateDocument 
 }
 
 function resolvePolicy(options: CompleteOptions): ProgressionPolicyDefinition | undefined {
-	const policy = options.policy ?? "strict";
+	const policy = options.policy ?? SINGLE_ROUTE;
 
 	if (typeof policy === "function") {
 		return { id: "custom", canComplete: policy };

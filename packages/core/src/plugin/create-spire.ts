@@ -1,3 +1,4 @@
+import { BUILTIN_POLICIES } from "../progress/policies.js";
 import { err, ok, type Result } from "../result.js";
 import { type PluginError, pluginError } from "./errors.js";
 import { createEventBus } from "./event-bus.js";
@@ -34,18 +35,6 @@ export interface Spire extends PluginContext {
 export interface CreateSpireOptions {
 	plugins?: readonly SpirePlugin[];
 }
-
-/** The two policies the SDK guarantees exist without any plugin loaded. */
-export const BUILTIN_POLICIES: readonly ProgressionPolicyDefinition[] = [
-	{
-		id: "strict",
-		canComplete: (ctx) => ctx.status === "reachable",
-	},
-	{
-		id: "free",
-		canComplete: () => true,
-	},
-];
 
 /**
  * Build a Spire instance from a plugin list.

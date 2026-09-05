@@ -22,7 +22,7 @@ export type { MigrationError } from "./migrate.js";
 export { documentVersion, migrate } from "./migrate.js";
 // Plugin system
 export type { CreateSpireOptions, Spire } from "./plugin/create-spire.js";
-export { BUILTIN_POLICIES, createSpire } from "./plugin/create-spire.js";
+export { createSpire } from "./plugin/create-spire.js";
 export type { PluginError, PluginErrorCode } from "./plugin/errors.js";
 export { pluginError } from "./plugin/errors.js";
 export type { EventBus, EventHandlerError, Unsubscribe } from "./plugin/event-bus.js";
@@ -52,10 +52,11 @@ export { createRegistry } from "./plugin/registry.js";
 export type { ServiceHandle, ServiceRegistry, Unprovide } from "./plugin/service.js";
 export { createServiceRegistry, defineService } from "./plugin/service.js";
 export { mergeStates } from "./progress/merge.js";
+export { BUILTIN_POLICIES, FREE, SINGLE_ROUTE, STRICT } from "./progress/policies.js";
 // Progression
 export { getNodeStatus, getProgress, getReachableNodes } from "./progress/status.js";
-export type { CompleteOptions, RuleViolation } from "./progress/transitions.js";
-export { complete, uncomplete } from "./progress/transitions.js";
+export type { CompleteOptions, PolicyOptions, RuleViolation } from "./progress/transitions.js";
+export { complete, getCompletableNodes, uncomplete } from "./progress/transitions.js";
 export type { Err, Ok, Result } from "./result.js";
 export { collect, err, isErr, isOk, mapErr, mapResult, ok, unwrapOr } from "./result.js";
 // Determinism

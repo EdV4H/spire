@@ -228,7 +228,9 @@ export function MapView({
 
 			<div className="map-foot">
 				<p className="hint">
-					ノードを押すと完了／取り消し。下端が row 0、上端が終端行。⌘/Ctrl + ホイールで拡大縮小。
+					ノードを押すと完了／取り消し。下端が row 0、上端が終端行。⌘/Ctrl +
+					ホイールで拡大縮小。既定の <code>single-route</code>{" "}
+					では道は1本しか選べない（分岐の片方を通ると、もう片方は閉じる）。
 				</p>
 				{transitions.length > 0 && (
 					<ul className="transitions mono">

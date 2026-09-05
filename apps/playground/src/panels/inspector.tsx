@@ -1,4 +1,5 @@
 import {
+	getCompletableNodes,
 	getProgress,
 	type MapDocument,
 	type NodeId,
@@ -15,6 +16,8 @@ interface Props {
 	map: MapDocument | undefined;
 	state: StateDocument;
 	selectedNodeId: NodeId | undefined;
+	/** The policy the map view is completing under. */
+	policy: string;
 }
 
 /**
@@ -22,10 +25,21 @@ interface Props {
  * attribution, derived progress, and the validator's own output. Nothing here
  * is recomputed by the app.
  */
-export function Inspector({ spire, map, state, selectedNodeId }: Props): ReactElement {
+export function Inspector({ spire, map, state, selectedNodeId, policy }: Props): ReactElement {
 	const gen = spire === undefined ? undefined : getGenRegistries(spire);
 	const validation = map === undefined ? undefined : validateMap(map, spire);
 	const progress = map === undefined ? undefined : getProgress(map, state);
+	// `reachable` is structural and `completable` is what the policy allows. They
+	// are equal under `strict` and diverge the moment `single-route` refuses the
+	// arm of a branch you turned away from — which is the whole point of showing
+	// both.
+	const completable =
+		map === undefined
+			? []
+			: getCompletableNodes(map, state, {
+					policy,
+					...(spire === undefined ? {} : { spire }),
+				});
 	const selected = map?.nodes.find((node) => node.id === selectedNodeId);
 
 	return (
@@ -45,6 +59,10 @@ export function Inspector({ spire, map, state, selectedNodeId }: Props): ReactEl
 						<div>
 							<dt>reachable</dt>
 							<dd>{progress.reachableCount}</dd>
+						</div>
+						<div>
+							<dt>completable</dt>
+							<dd>{completable.length}</dd>
 						</div>
 						<div>
 							<dt>longest path</dt>
