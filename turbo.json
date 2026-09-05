@@ -1,10 +1,11 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalPassThroughEnv": ["TMPDIR", "TMP", "TEMP"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"outputs": ["dist/**"],
-			"inputs": ["src/**", "package.json", "tsconfig.json"]
+			"inputs": ["src/**", "package.json", "tsconfig.json", "tsconfig.build.json"]
 		},
 		"typecheck": {
 			"dependsOn": ["^build"],
@@ -16,6 +17,11 @@
 		},
 		"clean": {
 			"cache": false
+		},
+		"dev": {
+			"dependsOn": ["^build"],
+			"cache": false,
+			"persistent": true
 		}
 	}
 }

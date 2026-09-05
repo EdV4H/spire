@@ -13,8 +13,8 @@
 		}
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.json",
-		"typecheck": "tsc --noEmit",
+		"build": "tsc -p tsconfig.build.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"test": "vitest run --passWithNoTests",
 		"clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
 	},
@@ -23,6 +23,12 @@
 		"@edv4h/spire-layout": "workspace:*"
 	},
 	"devDependencies": {
+		"@types/jsdom": "30.0.0",
+		"@types/react": "19.2.18",
+		"@types/react-dom": "19.2.5",
+		"jsdom": "30.0.1",
+		"react": "19.2.8",
+		"react-dom": "19.2.8",
 		"typescript": "7.0.2",
 		"vitest": "4.1.11"
 	},
@@ -42,5 +48,8 @@
 	"homepage": "https://github.com/EdV4H/spire#readme",
 	"bugs": {
 		"url": "https://github.com/EdV4H/spire/issues"
+	},
+	"peerDependencies": {
+		"react": ">=19"
 	}
 }

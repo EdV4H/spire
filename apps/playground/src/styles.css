@@ -1,0 +1,564 @@
+/*
+ * Plain on purpose. This is a test surface for the SDK, so the styling stays
+ * out of the way: one accent, one mono face for anything the SDK produced, and
+ * enough structure to scan three columns at once.
+ */
+
+:root {
+	--ground: #f4f6f8;
+	--surface: #ffffff;
+	--ink: #1b2028;
+	--muted: #6c7683;
+	--line: #dfe4ea;
+	--accent: #2f4bd0;
+	--accent-soft: #eaeefb;
+	--error: #b91c1c;
+	--warn: #b45309;
+	--ok: #15803d;
+	--mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--ground);
+	color: var(--ink);
+	font:
+		14px / 1.6 system-ui,
+		-apple-system,
+		"Hiragino Sans",
+		"Noto Sans JP",
+		sans-serif;
+}
+
+/*
+ * The three columns fill the viewport exactly and scroll inside themselves. A
+ * page that grows with its content leaves the map, the spec and the inspector
+ * at different scroll positions, and this is a surface you read all three of at
+ * once.
+ */
+.layout {
+	display: grid;
+	/* The sides resolve to their max whenever there is room, so a wide window
+	   looks exactly as before. Below that they give ground instead of forcing
+	   the whole layout into one column — which needs a floor under the centre
+	   track, since a `minmax(0, 1fr)` centre would sooner shrink to nothing
+	   than make the sides yield a pixel. */
+	grid-template-columns: minmax(240px, 340px) minmax(320px, 1fr) minmax(260px, 360px);
+	grid-template-rows: minmax(0, 1fr);
+	grid-template-areas: "left center right";
+	gap: 16px;
+	padding: 16px;
+	height: 100dvh;
+	overflow: hidden;
+}
+
+/* `min-height: 0` is what lets a grid child shrink below its content and scroll. */
+.column {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+	min-height: 0;
+	height: 100%;
+}
+.column--left {
+	grid-area: left;
+}
+.column--center {
+	grid-area: center;
+	overflow-y: auto;
+}
+.column--right {
+	grid-area: right;
+	overflow-y: auto;
+}
+
+/* ── Draggable split ────────────────────────────────────── */
+
+.split {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+.split-pane {
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+.split-pane--top {
+	height: var(--split-top, 46%);
+}
+.split-pane--rest {
+	flex: 1;
+}
+
+.splitter {
+	flex: 0 0 14px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: row-resize;
+	touch-action: none;
+	border-radius: 3px;
+}
+.splitter:hover,
+.splitter:focus-visible {
+	background: var(--accent-soft);
+}
+.splitter-grip {
+	width: 44px;
+	height: 3px;
+	border-radius: 2px;
+	background: var(--line);
+}
+.splitter:hover .splitter-grip,
+.splitter:focus-visible .splitter-grip {
+	background: var(--accent);
+}
+
+.panel {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* A panel that owns a whole pane fills it and scrolls its own overflow. */
+.split-pane > .panel {
+	height: 100%;
+	overflow-y: auto;
+}
+.split-pane > .panel--fill {
+	overflow: hidden;
+}
+
+.panel h2 {
+	margin: 0;
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted);
+}
+.panel h3 {
+	margin: 0 0 6px;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
+}
+
+.hint {
+	margin: 0;
+	font-size: 12px;
+	color: var(--muted);
+}
+.mono {
+	font-family: var(--mono);
+	font-size: 12px;
+}
+code {
+	font-family: var(--mono);
+	font-size: 12px;
+}
+
+/* controls */
+
+button {
+	font: inherit;
+	padding: 6px 12px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	cursor: pointer;
+}
+button:hover:not(:disabled) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+button:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+button.primary:hover:not(:disabled) {
+	color: #fff;
+	opacity: 0.9;
+}
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+select,
+input[type="range"] {
+	font: inherit;
+}
+select {
+	padding: 4px 6px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.chip {
+	padding: 4px 10px;
+	font-size: 12px;
+	border-radius: 999px;
+}
+.chip--on {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+.chip--on:hover {
+	color: #fff;
+}
+
+.editor {
+	width: 100%;
+	/* The pane is the resize handle now, so the textarea just fills it. */
+	resize: none;
+	flex: 1;
+	min-height: 80px;
+	padding: 10px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: #fbfcfd;
+	color: var(--ink);
+	line-height: 1.5;
+}
+
+.checklist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.checklist li {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.checklist label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.actions {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.actions label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* alerts */
+
+.alert {
+	border-radius: 4px;
+	padding: 10px 12px;
+	font-size: 13px;
+	border: 1px solid;
+}
+.alert p,
+.alert ul {
+	margin: 4px 0 0;
+}
+.alert ul {
+	padding-left: 18px;
+}
+.alert--error {
+	border-color: #f0c4c4;
+	background: #fdf3f3;
+	color: var(--error);
+}
+.alert--warn {
+	border-color: #f0dcb8;
+	background: #fdf8ef;
+	color: var(--warn);
+}
+.alert--note {
+	border-color: #c9d4f5;
+	background: #f3f6fd;
+	color: var(--accent);
+}
+
+/* map */
+
+.panel--map {
+	gap: 12px;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+.map-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 18px;
+	align-items: center;
+}
+.map-controls label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.canvas {
+	background: #fff;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	overflow: auto;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	/* `safe` keeps the overflow reachable: centring a zoomed-in map the plain
+	   way pushes its left edge out of the scrollable area for good. */
+	justify-content: safe center;
+	align-items: safe center;
+	padding: 8px;
+}
+.canvas svg {
+	display: block;
+}
+.zoom {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: auto;
+}
+.zoom button {
+	min-width: 30px;
+	padding: 4px 8px;
+}
+.zoom__value {
+	min-width: 44px;
+	text-align: center;
+	color: var(--muted);
+}
+
+.empty {
+	color: var(--muted);
+	padding: 48px 0;
+}
+
+.map-foot {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.transitions {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	color: var(--muted);
+}
+
+/* node types */
+
+.typelist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+.typelist li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.swatch {
+	width: 13px;
+	height: 13px;
+	border-radius: 50%;
+	border: 2px solid;
+	flex: 0 0 auto;
+}
+.type-id {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.type-label {
+	color: var(--muted);
+	font-size: 11.5px;
+	white-space: nowrap;
+}
+.type-count {
+	/* Pushed right so the counts line up regardless of label length. */
+	margin-left: auto;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+.type-tags {
+	display: flex;
+	gap: 4px;
+}
+.tag {
+	font-size: 10px;
+	line-height: 1.5;
+	padding: 0 5px;
+	border-radius: 3px;
+	background: var(--accent-soft);
+	color: var(--accent);
+	white-space: nowrap;
+}
+.tag--muted {
+	background: #f1f3f5;
+	color: var(--muted);
+}
+
+/* inspector */
+
+.block {
+	border-top: 1px solid var(--line);
+	padding-top: 10px;
+}
+.block:first-of-type {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px 12px;
+	margin: 0;
+}
+.stats div {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+.stats dt {
+	color: var(--muted);
+}
+.stats dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.ok {
+	color: var(--ok);
+	margin: 0;
+}
+.errors {
+	margin: 0;
+	padding-left: 16px;
+	font-size: 12px;
+	color: var(--error);
+}
+
+.json {
+	margin: 0;
+	max-height: 220px;
+	overflow: auto;
+	background: #fbfcfd;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	padding: 8px;
+	line-height: 1.45;
+}
+
+.registry {
+	margin-bottom: 10px;
+}
+.registry-title {
+	color: var(--muted);
+}
+.registry ul {
+	list-style: none;
+	margin: 2px 0 0;
+	padding: 0;
+}
+.registry li {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
+.by {
+	color: var(--muted);
+}
+
+.ordered {
+	margin: 4px 0 0;
+	padding-left: 20px;
+}
+.loaded {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Narrow screens stack and let the page scroll instead: three panes sharing one
+   short viewport is worse than one long column. */
+@media (max-width: 900px) {
+	.layout {
+		grid-template-columns: 1fr;
+		grid-template-rows: none;
+		grid-template-areas: "left" "center" "right";
+		height: auto;
+		min-height: 100dvh;
+		overflow: visible;
+	}
+	.column {
+		height: auto;
+	}
+	.column--center,
+	.column--right {
+		overflow-y: visible;
+	}
+	.split {
+		height: auto;
+	}
+	.split-pane--top {
+		height: auto;
+	}
+	.split-pane > .panel {
+		height: auto;
+		overflow: visible;
+	}
+	.splitter {
+		display: none;
+	}
+	.editor {
+		resize: vertical;
+		min-height: 240px;
+	}
+	.panel--map {
+		overflow: visible;
+	}
+	.canvas {
+		max-height: 70vh;
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"name": "@edv4h/spire-example-cli",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"start": "node --experimental-strip-types generate.ts",
+		"typecheck": "tsc -p tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@edv4h/spire-core": "workspace:*",
+		"@edv4h/spire-gen": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "24.10.1",
+		"typescript": "7.0.2"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"name": "@acme/spire-onboarding",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Third-party proof: extending Spire with only its public API",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run --passWithNoTests"
+	},
+	"dependencies": {
+		"@edv4h/spire-core": "workspace:*",
+		"@edv4h/spire-gen": "workspace:*",
+		"zod": "4.4.3"
+	},
+	"devDependencies": {
+		"typescript": "7.0.2",
+		"vitest": "4.1.11"
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"name": "@edv4h/spire-playground",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "A place to try Spire's plugins and features",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -p tsconfig.json --noEmit && vite build",
+		"preview": "vite preview",
+		"typecheck": "tsc -p tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@edv4h/spire-core": "workspace:*",
+		"@edv4h/spire-gen": "workspace:*",
+		"@edv4h/spire-layout": "workspace:*",
+		"@edv4h/spire-plugin-policy-quorum": "workspace:*",
+		"@edv4h/spire-plugin-rules-extra": "workspace:*",
+		"@edv4h/spire-render": "workspace:*",
+		"react": "19.2.8",
+		"react-dom": "19.2.8"
+	},
+	"devDependencies": {
+		"@types/react": "19.2.18",
+		"@types/react-dom": "19.2.5",
+		"@vitejs/plugin-react": "6.1.1",
+		"typescript": "7.0.2",
+		"vite": "8.2.2"
+	}
+}
