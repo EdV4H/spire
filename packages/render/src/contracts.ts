@@ -1,4 +1,11 @@
-import type { MapDocument, NodeId, NodeStatus, SpireNode, StateDocument } from "@edv4h/spire-core";
+import type {
+	MapDocument,
+	NodeId,
+	NodeStatus,
+	Spire,
+	SpireNode,
+	StateDocument,
+} from "@edv4h/spire-core";
 import type { Orientation } from "@edv4h/spire-layout";
 import type { ReactElement } from "react";
 import type { SpireTheme } from "./theme.js";
@@ -20,12 +27,22 @@ export interface SpireMapProps {
 	 * smaller, which is exactly what `renderToSVG`'s `scale` does. Defaults to 1.
 	 */
 	scale?: number;
+	/**
+	 * Supplies the renderer registries, so a theme's `renderer` ids resolve.
+	 * Without it every node and edge draws the built-in look.
+	 */
+	spire?: Spire;
 	onNodePress?: (nodeId: NodeId) => void;
 	/**
 	 * Escape hatch: draw a node yourself. Return `undefined` or `null` to fall
 	 * back to the theme's circle, so a host can special-case one type without
 	 * reimplementing the rest. The returned element is placed inside a `<g>`
 	 * already translated to the node's centre — draw around the origin.
+	 *
+	 * **React only.** `renderToSVG` cannot run this, so a node drawn through it
+	 * looks different in a share image. Prefer registering a `NodeRenderer`,
+	 * which returns shapes both backends can draw; reach for this when the node
+	 * genuinely needs React (a `foreignObject`, a component you already have).
 	 */
 	renderNode?: (node: SpireNode, status: NodeStatus) => ReactElement | null | undefined;
 	/**

@@ -2,6 +2,8 @@ import { SPIRE_PLUGIN_API_VERSION, type SpirePlugin } from "@edv4h/spire-core";
 import { type ContentProvider, createGenPlugin } from "@edv4h/spire-gen";
 import { createQuorumPolicyPlugin } from "@edv4h/spire-plugin-policy-quorum";
 import { createRulesExtraPlugin } from "@edv4h/spire-plugin-rules-extra";
+import { createRenderPlugin } from "@edv4h/spire-render";
+import { EDGE_RENDERERS, LAYERS, NODE_RENDERERS } from "./renderers.js";
 
 /**
  * The plugins the playground can load, each behind a toggle.
@@ -135,6 +137,25 @@ export const availablePlugins: readonly PluginEntry[] = [
 		requires: [],
 		create: () => createInlineDemoPlugin(),
 	},
+	{
+		id: "renderers",
+		label: "@edv4h/spire-render",
+		note: "描画のレジストリと、ノード / エッジ / レイヤのデモ実装。外すと下の「描画」がすべて既定に戻る。",
+		requires: [],
+		create: () =>
+			createRenderPlugin({
+				nodeRenderers: NODE_RENDERERS,
+				edgeRenderers: EDGE_RENDERERS,
+				layers: LAYERS,
+			}),
+	},
 ];
 
-export const defaultEnabled = ["gen", "rules-extra", "node-types", "policy-quorum", "inline"];
+export const defaultEnabled = [
+	"gen",
+	"rules-extra",
+	"node-types",
+	"policy-quorum",
+	"inline",
+	"renderers",
+];

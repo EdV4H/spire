@@ -9,7 +9,7 @@ import {
 	uncomplete,
 } from "@edv4h/spire-core";
 import { type GenSpecInput, generate, insertNode, regenerate } from "@edv4h/spire-gen";
-import { renderToSVG } from "@edv4h/spire-render";
+import { renderToSVG, type SpireTheme } from "@edv4h/spire-render";
 import { type ReactElement, useCallback, useMemo, useState } from "react";
 import { Inspector } from "./panels/inspector.js";
 import { MapView, type Transition, type ViewSettings } from "./panels/map-view.js";
@@ -65,7 +65,35 @@ export function App(): ReactElement {
 		jitter: 7,
 		curvature: 0.45,
 		scale: 1,
+		nodeRenderer: "",
+		edgeRenderer: "",
+		layers: true,
 	});
+
+	// The chosen renderer ids go into the theme, because that is where the SDK
+	// reads them from — the same JSON a host would ship. Applied to every type
+	// entry, since the picker is "draw all nodes this way".
+	const theme = useMemo((): SpireTheme => {
+		const node = Object.fromEntries(
+			Object.entries(playgroundTheme.node).map(([type, style]) => [
+				type,
+				style === undefined
+					? undefined
+					: { ...style, ...(view.nodeRenderer === "" ? {} : { renderer: view.nodeRenderer }) },
+			]),
+		) as SpireTheme["node"];
+
+		return {
+			...playgroundTheme,
+			node,
+			edge: {
+				...playgroundTheme.edge,
+				...(view.edgeRenderer === "" ? {} : { renderer: view.edgeRenderer }),
+			},
+			// Undefined means "every registered layer"; an empty list means none.
+			...(view.layers ? {} : { layers: [] }),
+		};
+	}, [view.nodeRenderer, view.edgeRenderer, view.layers]);
 
 	const parsed = useMemo(() => parseSpec(specText), [specText]);
 
@@ -158,16 +186,19 @@ export function App(): ReactElement {
 
 	const onExportSvg = useCallback(() => {
 		if (map === undefined) return;
+		// The same theme and the same Spire the screen uses, so the copied image
+		// draws the custom renderers exactly as they appear above.
 		const svg = renderToSVG(map, state, {
-			theme: playgroundTheme,
+			theme,
 			orientation: view.orientation,
 			jitter: { amount: view.jitter },
 			curvature: view.curvature,
 			title: `Spire map ${map.id}`,
+			...(spire === undefined ? {} : { spire }),
 		});
 		void navigator.clipboard?.writeText(svg);
 		log(`renderToSVG: ${svg.length} 文字をコピーした`);
-	}, [map, state, view, log]);
+	}, [map, state, view, theme, spire, log]);
 
 	return (
 		<div className="layout">
@@ -285,6 +316,8 @@ export function App(): ReactElement {
 				<MapView
 					map={map}
 					state={state}
+					spire={spire}
+					theme={theme}
 					view={view}
 					onView={setView}
 					onNodePress={onNodePress}

@@ -18,6 +18,13 @@ export interface NodeStyle {
 	strokeWidth: number;
 	/** 0-1. The usual way to say "this one is not available yet". */
 	opacity?: number;
+	/**
+	 * Id of a registered `NodeRenderer` to draw this type instead of the default
+	 * circle. An id rather than a function, so a theme stays JSON — the same
+	 * reason a GenSpec names its rules by id. Unregistered ids fall back to the
+	 * circle rather than failing: a theme should not be able to blank a map.
+	 */
+	renderer?: string;
 	/** Overrides applied per status, merged over the base. */
 	byStatus?: Partial<Record<NodeStatus, Partial<Omit<NodeStyle, "byStatus">>>>;
 }
@@ -27,6 +34,8 @@ export interface EdgeStyle {
 	strokeWidth: number;
 	/** Dash pattern in px, e.g. `[4, 6]`. Omit for a solid line. */
 	dash?: readonly number[];
+	/** Id of a registered `EdgeRenderer`. See `NodeStyle.renderer`. */
+	renderer?: string;
 	/** Style for an edge between two completed nodes. */
 	completed?: Partial<Omit<EdgeStyle, "completed">>;
 }
@@ -43,6 +52,12 @@ export type ThemeNodeStyles = { default: NodeStyle } & {
 export interface SpireTheme {
 	node: ThemeNodeStyles;
 	edge: EdgeStyle;
+	/**
+	 * Ids of the registered `LayerRenderer`s to draw. Omit to draw every one
+	 * that is registered — a plugin that registers a layer meant it to appear,
+	 * and a host that wants fewer names the ones it wants.
+	 */
+	layers?: readonly string[];
 	background?: string;
 	jitter: { amount: number };
 	spacing: { col: number; row: number };

@@ -33,6 +33,16 @@ export interface SceneNode {
 	stroke: string;
 	strokeWidth: number;
 	opacity: number;
+	/**
+	 * The node's `data`, carried through untouched.
+	 *
+	 * Here so that a custom renderer can draw a label without reaching for the
+	 * map document — reaching around the scene is what makes two backends
+	 * disagree. The SDK never interprets it.
+	 */
+	data: Record<string, unknown> | undefined;
+	/** Id of the `NodeRenderer` the theme asked for, if any. */
+	renderer: string | undefined;
 }
 
 export interface SceneEdge {
@@ -40,11 +50,23 @@ export interface SceneEdge {
 	from: NodeId;
 	to: NodeId;
 	path: string;
+	/**
+	 * The bezier's own points, alongside the `path` string.
+	 *
+	 * A custom edge renderer needs these: an arrowhead has to sit at `end` and
+	 * point along the tangent from `control[1]`, and there is no way back to that
+	 * from a `d` string. The default renderer uses only `path`.
+	 */
+	start: Point;
+	end: Point;
+	control: readonly [Point, Point];
 	stroke: string;
 	strokeWidth: number;
 	dash: readonly number[] | undefined;
 	/** True when both endpoints are completed — the "path taken". */
 	completed: boolean;
+	/** Id of the `EdgeRenderer` the theme asked for, if any. */
+	renderer: string | undefined;
 }
 
 export interface Scene {
@@ -105,10 +127,14 @@ export function buildScene(
 			from: edge.from,
 			to: edge.to,
 			path: geometry.path,
+			start: geometry.start,
+			end: geometry.end,
+			control: geometry.control,
 			stroke: style.stroke,
 			strokeWidth: style.strokeWidth,
 			dash: style.dash,
 			completed,
+			renderer: style.renderer,
 		});
 	}
 
@@ -130,6 +156,8 @@ export function buildScene(
 			stroke: style.stroke,
 			strokeWidth: style.strokeWidth,
 			opacity: style.opacity ?? 1,
+			data: node.data,
+			renderer: style.renderer,
 		});
 	}
 
