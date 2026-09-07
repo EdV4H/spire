@@ -15,6 +15,7 @@
 		"clean": "turbo run clean",
 		"changeset": "changeset",
 		"version": "changeset version",
+		"release": "pnpm build && changeset publish",
 		"prepare": "prek install"
 	},
 	"devDependencies": {

@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-core",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"type": "module",
 	"description": "Spire Map Format types, validation, progression state machine and plugin kernel",
 	"main": "./dist/index.js",
