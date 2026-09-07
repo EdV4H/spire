@@ -3,6 +3,7 @@ import { type ContentProvider, createGenPlugin } from "@edv4h/spire-gen";
 import { createQuorumPolicyPlugin } from "@edv4h/spire-plugin-policy-quorum";
 import { createRulesExtraPlugin } from "@edv4h/spire-plugin-rules-extra";
 import { createRenderPlugin } from "@edv4h/spire-render";
+import { canvasBackend } from "./canvas-backend.js";
 import { EDGE_RENDERERS, LAYERS, NODE_RENDERERS } from "./renderers.js";
 
 /**
@@ -140,13 +141,14 @@ export const availablePlugins: readonly PluginEntry[] = [
 	{
 		id: "renderers",
 		label: "@edv4h/spire-render",
-		note: "描画のレジストリと、ノード / エッジ / レイヤのデモ実装。外すと下の「描画」がすべて既定に戻る。",
+		note: "描画のレジストリと、ノード / エッジ / レイヤ / canvas バックエンドのデモ実装。外すと下の「描画」がすべて既定に戻る。",
 		requires: [],
 		create: () =>
 			createRenderPlugin({
 				nodeRenderers: NODE_RENDERERS,
 				edgeRenderers: EDGE_RENDERERS,
 				layers: LAYERS,
+				backends: [canvasBackend],
 			}),
 	},
 ];

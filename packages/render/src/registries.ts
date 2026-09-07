@@ -6,6 +6,7 @@ import {
 	type ServiceRegistry,
 	type Spire,
 } from "@edv4h/spire-core";
+import type { RenderBackend } from "./backend.js";
 import type { Scene, SceneEdge, SceneNode } from "./scene.js";
 import type { Shape } from "./shape.js";
 import type { SpireTheme } from "./theme.js";
@@ -66,6 +67,8 @@ export interface RenderRegistries {
 	nodeRenderers: Registry<NodeRenderer>;
 	edgeRenderers: Registry<EdgeRenderer>;
 	layers: Registry<LayerRenderer>;
+	/** Drawing backends. `svg` is built in and is not registered here. */
+	backends: Registry<RenderBackend>;
 	conflicts(): readonly PluginError[];
 }
 
@@ -79,22 +82,26 @@ export function createRenderRegistries(): InternalRenderRegistries {
 	const nodeRenderers = createRegistry<NodeRenderer>("node renderer");
 	const edgeRenderers = createRegistry<EdgeRenderer>("edge renderer");
 	const layers = createRegistry<LayerRenderer>("layer renderer");
+	const backends = createRegistry<RenderBackend>("render backend");
 
 	const conflicts = (): readonly PluginError[] => [
 		...nodeRenderers.conflicts(),
 		...edgeRenderers.conflicts(),
 		...layers.conflicts(),
+		...backends.conflicts(),
 	];
 
 	return {
 		nodeRenderers,
 		edgeRenderers,
 		layers,
+		backends,
 		conflicts,
 		scopedFor: (pluginId) => ({
 			nodeRenderers: nodeRenderers.scopedFor(pluginId),
 			edgeRenderers: edgeRenderers.scopedFor(pluginId),
 			layers: layers.scopedFor(pluginId),
+			backends: backends.scopedFor(pluginId),
 			conflicts,
 		}),
 	};

@@ -2,6 +2,7 @@ import type { MapDocument, NodeId, Spire, StateDocument } from "@edv4h/spire-cor
 import type { Orientation } from "@edv4h/spire-layout";
 import { SpireMap, type SpireTheme } from "@edv4h/spire-render";
 import { type ReactElement, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { CARD_SPACING, renderCardNode } from "../react-nodes.js";
 import { EDGE_RENDERERS, NODE_RENDERERS } from "../renderers.js";
 
 export interface ViewSettings {
@@ -16,6 +17,10 @@ export interface ViewSettings {
 	edgeRenderer: string;
 	/** Draw the demo background and overlay layers. */
 	layers: boolean;
+	/** Id of a registered RenderBackend, or "svg" for the built-in. */
+	backend: string;
+	/** Draw nodes with the React-only `renderNode` escape hatch. */
+	reactNodes: boolean;
 }
 
 interface Props {
@@ -226,6 +231,26 @@ export function MapView({
 				<label>
 					<input
 						type="checkbox"
+						checked={view.reactNodes}
+						onChange={(event) => onView({ ...view, reactNodes: event.target.checked })}
+					/>
+					<span className="hint">React 描画</span>
+				</label>
+
+				<label>
+					<span className="hint">バックエンド</span>
+					<select
+						value={view.backend}
+						onChange={(event) => onView({ ...view, backend: event.target.value })}
+					>
+						<option value="svg">svg（既定・キーボード可）</option>
+						<option value="playground:canvas">playground:canvas</option>
+					</select>
+				</label>
+
+				<label>
+					<input
+						type="checkbox"
 						checked={view.layers}
 						onChange={(event) => onView({ ...view, layers: event.target.checked })}
 					/>
@@ -272,18 +297,28 @@ export function MapView({
 						jitter={{ amount: view.jitter }}
 						curvature={view.curvature}
 						scale={view.scale}
+						backend={view.backend}
+						{...(view.reactNodes ? { renderNode: renderCardNode, spacing: CARD_SPACING } : {})}
 						onNodePress={onNodePress}
 						{...(focusNodeId === undefined ? {} : { focusNodeId })}
 					/>
 				)}
 			</div>
 
+			{view.reactNodes && (
+				<p className="hint hint--warn">
+					<code>renderNode</code> は React でしか動かない。「SVG をコピー」も canvas
+					バックエンドも、このカードではなくテーマの円を描く — 図形を返すレンダラとの違いはここ。
+				</p>
+			)}
+
 			<div className="map-foot">
 				<p className="hint">
 					ノードを押すと完了／取り消し。下端が row 0、上端が終端行。⌘/Ctrl +
 					ホイールで拡大縮小。既定の <code>single-route</code>{" "}
 					では道は1本しか選べない（分岐の片方を通ると、もう片方は閉じる）。描画を変えたら「SVG
-					をコピー」も見ること — <code>renderToSVG</code> が同じ図形を描く。
+					をコピー」も見ること — <code>renderToSVG</code> が同じ図形を描く。canvas バックエンドは
+					DOM が1要素で済む代わりに、ノードをキーボードで辿れない。
 				</p>
 				{transitions.length > 0 && (
 					<ul className="transitions mono">

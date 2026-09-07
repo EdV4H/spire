@@ -90,6 +90,17 @@ describe("layout — jitter", () => {
 		expect(a.nodes.n1?.center).toEqual(b.nodes.n1?.center);
 	});
 
+	it("leaves the grid anchor alone", () => {
+		// The anchor is what a row guide lines up with, so jitter must not move it.
+		const plain = layout(diamondMap());
+		const jittered = layout(diamondMap(), { jitter: { amount: 12 } });
+
+		for (const [id, node] of Object.entries(jittered.nodes)) {
+			expect(node.anchor).toEqual(plain.nodes[id]?.anchor);
+			expect(node.anchor).toEqual(plain.nodes[id]?.center);
+		}
+	});
+
 	it("stays within the requested amount", () => {
 		const plain = layout(diamondMap());
 		const jittered = layout(diamondMap(), { jitter: { amount: 10 } });

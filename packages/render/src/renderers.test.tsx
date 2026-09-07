@@ -1,11 +1,12 @@
 import { createSpire, type MapDocument, SMF_VERSION, type StateDocument } from "@edv4h/spire-core";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import type { RenderBackend } from "./backend.js";
 import { createRenderPlugin } from "./plugin.js";
 import type { EdgeRenderer, LayerRenderer, NodeRenderer } from "./registries.js";
 import { getRenderRegistries } from "./registries.js";
 import { SpireMap } from "./spire-map.js";
-import { renderToSVG } from "./svg.js";
+import { renderToSVG, sceneFor } from "./svg.js";
 import { defaultTheme, type SpireTheme } from "./theme.js";
 
 /**
@@ -210,3 +211,104 @@ describe("layer ordering", () => {
 		expect(svg.indexOf("#second")).toBeLessThan(svg.indexOf("#third"));
 	});
 });
+
+describe("backends", () => {
+	/** A backend that draws nothing but says it ran. */
+	const marker: RenderBackend = {
+		id: "marker",
+		keyboardAccessible: false,
+		Component: ({ scene }) => <div data-backend="marker">{scene.nodes.length}</div>,
+	};
+
+	async function spireWithBackend() {
+		const result = await createSpire({ plugins: [createRenderPlugin({ backends: [marker] })] });
+		if (!result.ok) throw new Error("plugin setup failed");
+		return result.value;
+	}
+
+	it("uses SVG by default", () => {
+		const html = renderToStaticMarkup(<SpireMap map={map()} state={state} />);
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("uses a registered backend when named", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="marker" />,
+		);
+
+		expect(html).toContain('data-backend="marker"');
+		expect(html).not.toContain("<svg");
+	});
+
+	it("hands the backend the same scene the SVG one draws", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="marker" />,
+		);
+
+		// The marker prints the node count: both backends see one scene.
+		expect(html).toContain(">2<");
+	});
+
+	it("falls back to SVG for an id nobody registered", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="nope" />,
+		);
+
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("falls back to SVG when a backend is named without a spire", () => {
+		const html = renderToStaticMarkup(<SpireMap map={map()} state={state} backend="marker" />);
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("records whether a backend can be operated from the keyboard", async () => {
+		const spire = await spireWithBackend();
+		const registries = getRenderRegistries(spire);
+
+		expect(registries?.backends.get("marker")?.keyboardAccessible).toBe(false);
+	});
+});
+
+describe("scene structure available to renderers", () => {
+	it("carries the grid cell, which jittered coordinates cannot recover", async () => {
+		// The row-guide bug: `center` includes jitter, so nodes in one row have
+		// different y values and grouping by coordinate draws a line per node.
+		const jittered: SpireTheme = { ...defaultTheme, jitter: { amount: 8 } };
+		const spire = await spireWith();
+		const scene = sceneFor(wideMap(), state, { theme: jittered });
+
+		const rows = new Set(scene.nodes.map((node) => node.cell.row));
+		const ys = new Set(scene.nodes.map((node) => Math.round(node.center.y)));
+
+		expect(rows.size).toBe(2);
+		// Three nodes share row 0 and land on three different y values.
+		expect(ys.size).toBeGreaterThan(rows.size);
+		expect(spire).toBeDefined();
+	});
+});
+
+/** Three nodes on row 0, so a jittered row is visibly more than one y. */
+function wideMap(): MapDocument {
+	return {
+		smfVersion: SMF_VERSION,
+		id: "map_wide",
+		seed: 3,
+		grid: { cols: 3, rows: 2 },
+		nodeTypes: [{ id: "step" }],
+		nodes: [
+			{ id: "a", type: "step", position: { col: 0, row: 0 } },
+			{ id: "b", type: "step", position: { col: 1, row: 0 } },
+			{ id: "c", type: "step", position: { col: 2, row: 0 } },
+			{ id: "d", type: "step", position: { col: 1, row: 1 } },
+		],
+		edges: [
+			{ id: "e1", from: "a", to: "d" },
+			{ id: "e2", from: "b", to: "d" },
+			{ id: "e3", from: "c", to: "d" },
+		],
+	};
+}

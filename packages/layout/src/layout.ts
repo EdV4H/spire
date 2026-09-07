@@ -45,6 +45,7 @@ export function layout(map: MapDocument, options: LayoutOptions = {}): LayoutRes
 		nodes[node.id] = {
 			id: node.id,
 			center: { x: base.x + offset.x + padding, y: base.y + offset.y + padding },
+			anchor: { x: base.x + padding, y: base.y + padding },
 			cell: { col: node.position.col, row: node.position.row },
 		};
 	}

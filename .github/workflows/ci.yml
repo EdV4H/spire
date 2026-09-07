@@ -3,8 +3,11 @@ name: CI
 on:
   push:
     branches: [main]
+  # No base-branch filter: `pull_request: branches:` matches the *base*, so
+  # filtering on main silently skipped CI for every stacked PR — which is
+  # exactly the case where you want it to run. Pushes are still limited to main
+  # because PRs already cover branches.
   pull_request:
-    branches: [main]
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
