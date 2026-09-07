@@ -6,7 +6,7 @@ import { createRenderPlugin } from "./plugin.js";
 import type { EdgeRenderer, LayerRenderer, NodeRenderer } from "./registries.js";
 import { getRenderRegistries } from "./registries.js";
 import { SpireMap } from "./spire-map.js";
-import { renderToSVG } from "./svg.js";
+import { renderToSVG, sceneFor } from "./svg.js";
 import { defaultTheme, type SpireTheme } from "./theme.js";
 
 /**
@@ -272,3 +272,43 @@ describe("backends", () => {
 		expect(registries?.backends.get("marker")?.keyboardAccessible).toBe(false);
 	});
 });
+
+describe("scene structure available to renderers", () => {
+	it("carries the grid cell, which jittered coordinates cannot recover", async () => {
+		// The row-guide bug: `center` includes jitter, so nodes in one row have
+		// different y values and grouping by coordinate draws a line per node.
+		const jittered: SpireTheme = { ...defaultTheme, jitter: { amount: 8 } };
+		const spire = await spireWith();
+		const scene = sceneFor(wideMap(), state, { theme: jittered });
+
+		const rows = new Set(scene.nodes.map((node) => node.cell.row));
+		const ys = new Set(scene.nodes.map((node) => Math.round(node.center.y)));
+
+		expect(rows.size).toBe(2);
+		// Three nodes share row 0 and land on three different y values.
+		expect(ys.size).toBeGreaterThan(rows.size);
+		expect(spire).toBeDefined();
+	});
+});
+
+/** Three nodes on row 0, so a jittered row is visibly more than one y. */
+function wideMap(): MapDocument {
+	return {
+		smfVersion: SMF_VERSION,
+		id: "map_wide",
+		seed: 3,
+		grid: { cols: 3, rows: 2 },
+		nodeTypes: [{ id: "step" }],
+		nodes: [
+			{ id: "a", type: "step", position: { col: 0, row: 0 } },
+			{ id: "b", type: "step", position: { col: 1, row: 0 } },
+			{ id: "c", type: "step", position: { col: 2, row: 0 } },
+			{ id: "d", type: "step", position: { col: 1, row: 1 } },
+		],
+		edges: [
+			{ id: "e1", from: "a", to: "d" },
+			{ id: "e2", from: "b", to: "d" },
+			{ id: "e3", from: "c", to: "d" },
+		],
+	};
+}

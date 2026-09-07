@@ -103,22 +103,48 @@ export const arrowRenderer: EdgeRenderer = {
 	},
 };
 
-/** A row guide under everything, to show that layers land behind the edges. */
+/**
+ * A row guide under everything, to show that layers land behind the edges.
+ *
+ * Drawn at `anchor`, not `center`: `center` carries the theme's jitter, so
+ * nodes in one row sit at different y values. Grouping by the drawn coordinate
+ * put a line under every *node* instead of every row, and averaging them only
+ * approximated the row — a row holding one node does not average at all.
+ */
 export const rowGuidesLayer: LayerRenderer = {
 	id: "playground:row-guides",
 	place: "background",
 	draw: (ctx) => {
-		const { width } = ctx.scene.size;
-		const rows = new Set(ctx.scene.nodes.map((node) => Math.round(node.center.y)));
-		return [...rows].map((y) => ({
-			shape: "line",
-			x1: 0,
-			y1: y,
-			x2: width,
-			y2: y,
-			stroke: "#eceef1",
-			strokeWidth: 1,
-		}));
+		const { width, height } = ctx.scene.size;
+		// A row runs across the map, so which axis it spans follows orientation.
+		const horizontal =
+			ctx.scene.orientation === "left-right" || ctx.scene.orientation === "right-left";
+
+		const at = new Set(
+			ctx.scene.nodes.map((node) => (horizontal ? node.anchor.x : node.anchor.y)),
+		);
+
+		return [...at].map((position) =>
+			horizontal
+				? {
+						shape: "line",
+						x1: position,
+						y1: 0,
+						x2: position,
+						y2: height,
+						stroke: "#eceef1",
+						strokeWidth: 1,
+					}
+				: {
+						shape: "line",
+						x1: 0,
+						y1: position,
+						x2: width,
+						y2: position,
+						stroke: "#eceef1",
+						strokeWidth: 1,
+					},
+		);
 	},
 };
 

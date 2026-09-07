@@ -47,6 +47,15 @@ export interface NodeLayout {
 	center: Point;
 	/** Grid cell this came from, for hit-testing back to the document. */
 	cell: { col: number; row: number };
+	/**
+	 * Where the grid says this node is, before jitter.
+	 *
+	 * `center` is where it is drawn. Anything that has to line up with the grid
+	 * rather than with a particular node — a row guide, a column band — needs
+	 * this one, because averaging jittered centres only approximates it and a
+	 * row holding a single node does not average at all.
+	 */
+	anchor: Point;
 }
 
 export interface EdgeLayout {
