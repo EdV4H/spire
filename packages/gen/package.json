@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-gen",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"type": "module",
 	"description": "Deterministic lane-based DAG map generation for Spire",
 	"main": "./dist/index.js",

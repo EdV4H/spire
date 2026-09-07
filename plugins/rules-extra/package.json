@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-plugin-rules-extra",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"type": "module",
 	"description": "Additional generation constraint rules for Spire",
 	"main": "./dist/index.js",

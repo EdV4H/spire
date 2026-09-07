@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-plugin-policy-quorum",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"type": "module",
 	"description": "Quorum progression policy for Spire",
 	"main": "./dist/index.js",
