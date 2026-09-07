@@ -201,12 +201,12 @@ describe("createSpire — lifecycle", () => {
 });
 
 describe("createSpire — registries", () => {
-	it("provides the built-in strict and free policies with no plugins", async () => {
+	it("provides the built-in policies with no plugins, strictest first", async () => {
 		const result = await createSpire();
 
 		expect(result.ok).toBe(true);
 		if (!result.ok) return;
-		expect(result.value.policies.ids()).toEqual(["strict", "free"]);
+		expect(result.value.policies.ids()).toEqual(["single-route", "strict", "free"]);
 	});
 
 	it("fails creation on a duplicate registry id instead of overwriting", async () => {

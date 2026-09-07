@@ -81,7 +81,18 @@ setup(ctx) {
 | `services` | `ServiceRegistry` — 汎用 IoC |
 | `plugins` | 読み取り専用のプラグイン一覧 |
 
-`strict` と `free` はカーネルが最初から登録している。
+カーネルは3つの進行ポリシーを最初から登録している。厳しい順:
+
+| id | 許すもの |
+|---|---|
+| `single-route` | **既定。** 完了集合が1本の道であり続ける限り。分岐の片方を通ると、もう片方は閉じる |
+| `strict` | reachable なノード。分岐はすべて踏破できる |
+| `free` | 何でも |
+
+「いま実際に完了できるノード」は `getCompletableNodes(map, state, { policy })` で引ける。
+`getReachableNodes` は構造的な問い（完了した先行ノードがあるか）に答えるもので、ポリシーを
+知らない — レンダラが色を決めるのはこちらである。`single-route` の下では、通らなかった側の
+分岐は **reachable のままで completable ではない**。
 
 ### gen が持つもの（`getGenRegistries(ctx.services)`）
 

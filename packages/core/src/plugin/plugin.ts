@@ -93,7 +93,8 @@ export interface PolicyContext {
 }
 
 /**
- * Decides whether a node may be completed. `strict` (reachable only) and `free`
+ * Decides whether a node may be completed. `single-route` (the default: one
+ * unbroken path), `strict` (reachable only, every branch walkable) and `free`
  * (any node) are built in; anything else — quorum rules, time windows, role
  * checks — arrives as a plugin and is selected by id, so a host's configuration
  * JSON can name a policy without shipping code.

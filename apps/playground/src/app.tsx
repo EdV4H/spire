@@ -45,7 +45,7 @@ export function App(): ReactElement {
 
 	const [genError, setGenError] = useState<string | undefined>(undefined);
 	const [busy, setBusy] = useState(false);
-	const [policy, setPolicy] = useState("strict");
+	const [policy, setPolicy] = useState("single-route");
 	const [violation, setViolation] = useState<string | undefined>(undefined);
 	// Selection and focus are separate on purpose. Clicking a node selects it —
 	// the inspector follows — but must not move the view: the thing you just
@@ -69,7 +69,7 @@ export function App(): ReactElement {
 
 	const parsed = useMemo(() => parseSpec(specText), [specText]);
 
-	const policies = spire?.policies.ids() ?? ["strict", "free"];
+	const policies = spire?.policies.ids() ?? ["single-route", "strict", "free"];
 
 	const runGenerate = useCallback(async () => {
 		if (parsed.error !== undefined) return;
@@ -294,7 +294,13 @@ export function App(): ReactElement {
 			</main>
 
 			<aside className="column column--right">
-				<Inspector spire={spire} map={map} state={state} selectedNodeId={selectedNodeId} />
+				<Inspector
+					spire={spire}
+					map={map}
+					state={state}
+					selectedNodeId={selectedNodeId}
+					policy={policy}
+				/>
 			</aside>
 		</div>
 	);
