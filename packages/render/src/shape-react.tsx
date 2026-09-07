@@ -1,5 +1,6 @@
 import { Fragment, type ReactElement } from "react";
 import type { Paint, Shape } from "./shape.js";
+import { transformToSvg } from "./shape.js";
 
 /**
  * The React half of the shape vocabulary.
@@ -60,12 +61,14 @@ function shapeElement(shape: Shape): ReactElement {
 					{shape.text}
 				</text>
 			);
-		case "group":
+		case "group": {
+			const transform = transformToSvg(shape.transform);
 			return (
-				<g {...(shape.transform === undefined ? {} : { transform: shape.transform })}>
+				<g {...(transform === "" ? {} : { transform })}>
 					<Shapes shapes={shape.children} />
 				</g>
 			);
+		}
 	}
 }
 

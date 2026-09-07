@@ -1,3 +1,5 @@
+export type { BackendProps, RenderBackend } from "./backend.js";
+export { SVG_BACKEND_ID } from "./backend.js";
 export type { SpireMapProps, StaticRenderOptions } from "./contracts.js";
 export type { Drawing, DrawingOptions } from "./drawing.js";
 export { createDrawing, defaultEdgeShapes, defaultNodeShapes } from "./drawing.js";
@@ -23,11 +25,13 @@ export type {
 	RectShape,
 	Shape,
 	TextShape,
+	Transform,
 } from "./shape.js";
-export { shapeToSvg } from "./shape.js";
+export { shapeToSvg, transformToSvg } from "./shape.js";
 export { Shapes } from "./shape-react.js";
 export { SpireMap } from "./spire-map.js";
 export type { SvgOptions } from "./svg.js";
 export { renderToSVG, sceneFor } from "./svg.js";
+export { SvgBackend, svgBackend } from "./svg-backend.js";
 export type { EdgeStyle, NodeStyle, SpireTheme, ThemeNodeStyles } from "./theme.js";
 export { defaultTheme, resolveEdgeStyle, resolveNodeStyle } from "./theme.js";

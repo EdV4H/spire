@@ -74,10 +74,27 @@ export interface TextShape extends Paint {
 	baseline?: "auto" | "middle" | "hanging";
 }
 
+/**
+ * A transform, described rather than spelled.
+ *
+ * It was an SVG transform *string* until a second backend existed, at which
+ * point the leak was obvious: `"translate(4 -8) rotate(45)"` is SVG's syntax,
+ * and a canvas backend would have had to parse it — the drawing vocabulary
+ * would have been SVG's vocabulary wearing a different name. Described this
+ * way, each backend applies it in its own terms.
+ *
+ * Applied in the order named here: translate, then rotate, then scale.
+ */
+export interface Transform {
+	translate?: readonly [number, number];
+	/** Degrees, clockwise. */
+	rotate?: number;
+	scale?: number;
+}
+
 export interface GroupShape {
 	shape: "group";
-	/** Applied to the children, e.g. `"translate(4 -8) rotate(45)"`. */
-	transform?: string;
+	transform?: Transform;
 	children: readonly Shape[];
 }
 
@@ -127,13 +144,27 @@ export function shapeToSvg(shape: Shape): string {
 				(shape.baseline === undefined ? "" : ` dominant-baseline="${shape.baseline}"`) +
 				`${paint(shape)}>${text(shape.text)}</text>`
 			);
-		case "group":
+		case "group": {
+			const transform = transformToSvg(shape.transform);
 			return (
-				`<g${shape.transform === undefined ? "" : ` transform="${attr(shape.transform)}"`}>` +
+				`<g${transform === "" ? "" : ` transform="${transform}"`}>` +
 				shape.children.map(shapeToSvg).join("") +
 				"</g>"
 			);
+		}
 	}
+}
+
+/** A `Transform` in SVG's spelling. Empty when there is nothing to apply. */
+export function transformToSvg(transform: Transform | undefined): string {
+	if (transform === undefined) return "";
+	const parts: string[] = [];
+	if (transform.translate !== undefined) {
+		parts.push(`translate(${num(transform.translate[0])} ${num(transform.translate[1])})`);
+	}
+	if (transform.rotate !== undefined) parts.push(`rotate(${num(transform.rotate)})`);
+	if (transform.scale !== undefined) parts.push(`scale(${num(transform.scale)})`);
+	return parts.join(" ");
 }
 
 function paint(value: Paint): string {

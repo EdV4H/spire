@@ -28,6 +28,8 @@ export interface SceneNode {
 	type: NodeTypeId;
 	status: NodeStatus;
 	center: Point;
+	/** Where the grid puts this node, before jitter. See `LayoutResult`. */
+	anchor: Point;
 	radius: number;
 	fill: string;
 	stroke: string;
@@ -41,6 +43,15 @@ export interface SceneNode {
 	 * disagree. The SDK never interprets it.
 	 */
 	data: Record<string, unknown> | undefined;
+	/**
+	 * The grid cell this node came from.
+	 *
+	 * `center` is the *drawn* position and includes jitter, so nodes sharing a
+	 * row do not share a `center.y`. Anything reasoning about grid structure —
+	 * a row guide, a column band, a row label — needs the cell, and rounding
+	 * jittered coordinates back into rows does not work.
+	 */
+	cell: { col: number; row: number };
 	/** Id of the `NodeRenderer` the theme asked for, if any. */
 	renderer: string | undefined;
 }
@@ -151,11 +162,13 @@ export function buildScene(
 			type: node.type,
 			status,
 			center: geometry.center,
+			anchor: geometry.anchor,
 			radius: style.size,
 			fill: style.fill,
 			stroke: style.stroke,
 			strokeWidth: style.strokeWidth,
 			opacity: style.opacity ?? 1,
+			cell: geometry.cell,
 			data: node.data,
 			renderer: style.renderer,
 		});

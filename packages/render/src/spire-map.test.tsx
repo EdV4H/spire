@@ -86,7 +86,7 @@ describe("SpireMap", () => {
 		const html = renderToStaticMarkup(<SpireMap map={map} state={state} theme={theme} />);
 		const svg = renderToSVG(map, state, { theme });
 
-		const paths = (markup: string) => (markup.match(/d="([^"]+)"/g) ?? []).sort();
+		const paths = (markup: string) => (markup.match(/\sd="([^"]+)"/g) ?? []).sort();
 		expect(paths(html)).toEqual(paths(svg));
 
 		const viewBox = (markup: string) => /viewBox="([^"]+)"/.exec(markup)?.[1];
@@ -107,7 +107,7 @@ describe("SpireMap", () => {
 		// The scene is untouched: zoom is a drawing concern, so the geometry and
 		// the viewBox must be identical to the unscaled render.
 		expect(attr(zoomed, "viewBox")).toBe(attr(plain, "viewBox"));
-		expect(zoomed.match(/d="([^"]+)"/g)).toEqual(plain.match(/d="([^"]+)"/g));
+		expect(zoomed.match(/\sd="([^"]+)"/g)).toEqual(plain.match(/\sd="([^"]+)"/g));
 	});
 
 	it("agrees with renderToSVG on what a scale means", () => {
