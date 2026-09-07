@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-render",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "module",
 	"description": "Spire renderer contracts and default theme (v0.1: types only)",
 	"main": "./dist/index.js",
