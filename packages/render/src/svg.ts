@@ -1,5 +1,7 @@
-import type { MapDocument, StateDocument } from "@edv4h/spire-core";
+import type { MapDocument, Spire, StateDocument } from "@edv4h/spire-core";
+import { createDrawing } from "./drawing.js";
 import { buildScene, type Scene, type SceneOptions } from "./scene.js";
+import { shapeToSvg } from "./shape.js";
 
 /**
  * Render a map to a standalone SVG string.
@@ -21,6 +23,11 @@ export interface SvgOptions extends SceneOptions {
 	className?: string;
 	/** Accessible name. Omit for a decorative image. */
 	title?: string;
+	/**
+	 * Supplies the renderer registries, so a theme's `renderer` ids resolve here
+	 * exactly as they do in `<SpireMap>`. Without it the built-in look is drawn.
+	 */
+	spire?: Spire;
 }
 
 export function renderToSVG(
@@ -29,6 +36,10 @@ export function renderToSVG(
 	options: SvgOptions = {},
 ): string {
 	const scene = buildScene(map, state, options);
+	const drawing = createDrawing(scene, {
+		...(options.spire === undefined ? {} : { spire: options.spire }),
+		...(options.theme === undefined ? {} : { theme: options.theme }),
+	});
 	const scale = options.scale ?? 1;
 	const width = round(scene.size.width * scale);
 	const height = round(scene.size.height * scale);
@@ -41,24 +52,28 @@ export function renderToSVG(
 		parts.push(`<rect width="100%" height="100%" fill="${escapeAttr(background)}"/>`);
 	}
 
+	for (const shape of drawing.layer("background")) parts.push(shapeToSvg(shape));
+
 	for (const edge of scene.edges) {
 		parts.push(
-			`<path d="${escapeAttr(edge.path)}" fill="none" stroke="${escapeAttr(edge.stroke)}"` +
-				` stroke-width="${edge.strokeWidth}" stroke-linecap="round"` +
-				(edge.dash === undefined ? "" : ` stroke-dasharray="${edge.dash.join(" ")}"`) +
-				` data-spire-edge="${escapeAttr(edge.id)}"/>`,
+			`<g data-spire-edge="${escapeAttr(edge.id)}">` +
+				drawing.edge(edge).map(shapeToSvg).join("") +
+				"</g>",
 		);
 	}
 
+	// Each node's shapes are wrapped in a `<g>` translated to its centre, so a
+	// renderer draws around the origin and does not have to know where it is.
 	for (const node of scene.nodes) {
 		parts.push(
-			`<circle cx="${round(node.center.x)}" cy="${round(node.center.y)}" r="${node.radius}"` +
-				` fill="${escapeAttr(node.fill)}" stroke="${escapeAttr(node.stroke)}"` +
-				` stroke-width="${node.strokeWidth}"` +
-				(node.opacity === 1 ? "" : ` opacity="${node.opacity}"`) +
-				` data-spire-node="${escapeAttr(node.id)}" data-spire-status="${node.status}"/>`,
+			`<g transform="translate(${round(node.center.x)} ${round(node.center.y)})"` +
+				` data-spire-node="${escapeAttr(node.id)}" data-spire-status="${node.status}">` +
+				drawing.node(node).map(shapeToSvg).join("") +
+				"</g>",
 		);
 	}
+
+	for (const shape of drawing.layer("overlay")) parts.push(shapeToSvg(shape));
 
 	return (
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${round(scene.size.width)} ${round(scene.size.height)}"` +

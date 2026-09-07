@@ -1,6 +1,31 @@
 export type { SpireMapProps, StaticRenderOptions } from "./contracts.js";
+export type { Drawing, DrawingOptions } from "./drawing.js";
+export { createDrawing, defaultEdgeShapes, defaultNodeShapes } from "./drawing.js";
+export type { RenderPluginOptions } from "./plugin.js";
+export { createRenderPlugin, RENDER_PLUGIN_ID } from "./plugin.js";
+export type {
+	EdgeRenderer,
+	LayerRenderer,
+	NodeRenderer,
+	RenderContext,
+	RenderRegistries,
+} from "./registries.js";
+export { createRenderRegistries, getRenderRegistries, renderService } from "./registries.js";
 export type { Scene, SceneEdge, SceneNode, SceneOptions } from "./scene.js";
 export { buildScene, statusMap } from "./scene.js";
+export type {
+	CircleShape,
+	GroupShape,
+	LineShape,
+	Paint,
+	PathShape,
+	PolygonShape,
+	RectShape,
+	Shape,
+	TextShape,
+} from "./shape.js";
+export { shapeToSvg } from "./shape.js";
+export { Shapes } from "./shape-react.js";
 export { SpireMap } from "./spire-map.js";
 export type { SvgOptions } from "./svg.js";
 export { renderToSVG, sceneFor } from "./svg.js";

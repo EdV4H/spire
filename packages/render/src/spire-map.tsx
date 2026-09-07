@@ -1,7 +1,9 @@
 import type { NodeId, NodeStatus } from "@edv4h/spire-core";
 import { type ReactElement, useEffect, useMemo, useRef } from "react";
 import type { SpireMapProps } from "./contracts.js";
-import { buildScene, type SceneNode } from "./scene.js";
+import { createDrawing } from "./drawing.js";
+import { buildScene } from "./scene.js";
+import { Shapes } from "./shape-react.js";
 
 /**
  * The React renderer.
@@ -23,6 +25,7 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 		padding,
 		curvature,
 		scale = 1,
+		spire,
 		onNodePress,
 		renderNode,
 		onNodeStatusChange,
@@ -43,6 +46,17 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 			}),
 		[map, state, theme, orientation, spacing, jitter, padding, curvature],
 	);
+
+	const drawing = useMemo(
+		() =>
+			createDrawing(scene, {
+				...(spire === undefined ? {} : { spire }),
+				...(theme === undefined ? {} : { theme }),
+			}),
+		[scene, spire, theme],
+	);
+	const background = useMemo(() => drawing.layer("background"), [drawing]);
+	const overlay = useMemo(() => drawing.layer("overlay"), [drawing]);
 
 	// Status changes are reported by diffing against the previous render, so a
 	// host gets exactly one call per node that actually moved.
@@ -106,22 +120,21 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 			style={scene.background === undefined ? undefined : { background: scene.background }}
 		>
 			<title>{title}</title>
+			<Shapes shapes={background} />
+
 			{scene.edges.map((edge) => (
-				<path
-					key={edge.id}
-					d={edge.path}
-					fill="none"
-					stroke={edge.stroke}
-					strokeWidth={edge.strokeWidth}
-					strokeLinecap="round"
-					strokeDasharray={edge.dash === undefined ? undefined : edge.dash.join(" ")}
-					data-spire-edge={edge.id}
-				/>
+				<g key={edge.id} data-spire-edge={edge.id}>
+					<Shapes shapes={drawing.edge(edge)} />
+				</g>
 			))}
 
 			{scene.nodes.map((node) => {
+				// The React-only escape hatch wins when it returns something. It is
+				// the one way to draw something `renderToSVG` cannot reproduce, which
+				// is why the shape-returning renderers are the documented route.
 				const custom = renderNode?.(nodeOf(props, node.id), node.status);
-				const shape = custom === undefined || custom === null ? defaultNode(node) : custom;
+				const shape =
+					custom === undefined || custom === null ? <Shapes shapes={drawing.node(node)} /> : custom;
 				const transform = `translate(${node.center.x} ${node.center.y})`;
 
 				// Two branches rather than conditional props: a node is either an
@@ -163,24 +176,14 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 					</g>
 				);
 			})}
+
+			<Shapes shapes={overlay} />
 		</svg>
 	);
 }
 
 function round(value: number): number {
 	return Math.round(value * 100) / 100;
-}
-
-function defaultNode(node: SceneNode): ReactElement {
-	return (
-		<circle
-			r={node.radius}
-			fill={node.fill}
-			stroke={node.stroke}
-			strokeWidth={node.strokeWidth}
-			opacity={node.opacity}
-		/>
-	);
 }
 
 /**

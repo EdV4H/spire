@@ -1,8 +1,8 @@
-import type { MapDocument, NodeId, StateDocument } from "@edv4h/spire-core";
+import type { MapDocument, NodeId, Spire, StateDocument } from "@edv4h/spire-core";
 import type { Orientation } from "@edv4h/spire-layout";
-import { SpireMap } from "@edv4h/spire-render";
+import { SpireMap, type SpireTheme } from "@edv4h/spire-render";
 import { type ReactElement, useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { playgroundTheme } from "../theme.js";
+import { EDGE_RENDERERS, NODE_RENDERERS } from "../renderers.js";
 
 export interface ViewSettings {
 	orientation: Orientation;
@@ -10,11 +10,21 @@ export interface ViewSettings {
 	curvature: number;
 	/** Drawn size multiplier. 1 is the layout's natural size. */
 	scale: number;
+	/** Id of a registered NodeRenderer, or "" for the built-in circle. */
+	nodeRenderer: string;
+	/** Id of a registered EdgeRenderer, or "" for the built-in bezier. */
+	edgeRenderer: string;
+	/** Draw the demo background and overlay layers. */
+	layers: boolean;
 }
 
 interface Props {
 	map: MapDocument | undefined;
 	state: StateDocument;
+	/** Resolves the theme's renderer ids. Undefined while the plugins rebuild. */
+	spire: Spire | undefined;
+	/** The theme with the chosen renderer ids already resolved into it. */
+	theme: SpireTheme;
 	view: ViewSettings;
 	onView: (view: ViewSettings) => void;
 	onNodePress: (nodeId: NodeId) => void;
@@ -45,6 +55,8 @@ interface ZoomAnchor {
 export function MapView({
 	map,
 	state,
+	spire,
+	theme,
 	view,
 	onView,
 	onNodePress,
@@ -181,6 +193,45 @@ export function MapView({
 					/>
 				</label>
 
+				<label>
+					<span className="hint">ノード描画</span>
+					<select
+						value={view.nodeRenderer}
+						onChange={(event) => onView({ ...view, nodeRenderer: event.target.value })}
+					>
+						<option value="">（既定の円）</option>
+						{NODE_RENDERERS.map((renderer) => (
+							<option key={renderer.id} value={renderer.id}>
+								{renderer.id}
+							</option>
+						))}
+					</select>
+				</label>
+
+				<label>
+					<span className="hint">エッジ描画</span>
+					<select
+						value={view.edgeRenderer}
+						onChange={(event) => onView({ ...view, edgeRenderer: event.target.value })}
+					>
+						<option value="">（既定のベジェ）</option>
+						{EDGE_RENDERERS.map((renderer) => (
+							<option key={renderer.id} value={renderer.id}>
+								{renderer.id}
+							</option>
+						))}
+					</select>
+				</label>
+
+				<label>
+					<input
+						type="checkbox"
+						checked={view.layers}
+						onChange={(event) => onView({ ...view, layers: event.target.checked })}
+					/>
+					<span className="hint">レイヤ</span>
+				</label>
+
 				<div className="zoom">
 					<button
 						type="button"
@@ -215,7 +266,8 @@ export function MapView({
 					<SpireMap
 						map={map}
 						state={state}
-						theme={playgroundTheme}
+						theme={theme}
+						{...(spire === undefined ? {} : { spire })}
 						orientation={view.orientation}
 						jitter={{ amount: view.jitter }}
 						curvature={view.curvature}
@@ -230,7 +282,8 @@ export function MapView({
 				<p className="hint">
 					ノードを押すと完了／取り消し。下端が row 0、上端が終端行。⌘/Ctrl +
 					ホイールで拡大縮小。既定の <code>single-route</code>{" "}
-					では道は1本しか選べない（分岐の片方を通ると、もう片方は閉じる）。
+					では道は1本しか選べない（分岐の片方を通ると、もう片方は閉じる）。描画を変えたら「SVG
+					をコピー」も見ること — <code>renderToSVG</code> が同じ図形を描く。
 				</p>
 				{transitions.length > 0 && (
 					<ul className="transitions mono">
