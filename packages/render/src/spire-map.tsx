@@ -1,14 +1,20 @@
 import type { NodeId, NodeStatus } from "@edv4h/spire-core";
 import { type ReactElement, useEffect, useMemo, useRef } from "react";
+import { SVG_BACKEND_ID } from "./backend.js";
 import type { SpireMapProps } from "./contracts.js";
 import { createDrawing } from "./drawing.js";
+import { getRenderRegistries } from "./registries.js";
 import { buildScene } from "./scene.js";
-import { Shapes } from "./shape-react.js";
+import { svgBackend } from "./svg-backend.js";
 
 /**
  * The React renderer.
  *
- * It draws the `Scene` and nothing else — the same scene `renderToSVG` draws.
+ * It builds the scene, resolves it to shapes, and hands both to a backend —
+ * SVG unless a host names another. Everything above the backend is shared, so
+ * two backends cannot disagree about where a node is or what colour it is; the
+ * only thing a backend decides is how the shapes reach the screen.
+ *
  * Deliberately absent: animation. The component reports *when* a node's status
  * changed (`onNodeStatusChange`) and leaves *how* to celebrate it to the
  * application, because a completion flourish is a product decision and baking
@@ -26,6 +32,7 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 		curvature,
 		scale = 1,
 		spire,
+		backend: backendId = SVG_BACKEND_ID,
 		onNodePress,
 		renderNode,
 		onNodeStatusChange,
@@ -55,8 +62,14 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 			}),
 		[scene, spire, theme],
 	);
-	const background = useMemo(() => drawing.layer("background"), [drawing]);
-	const overlay = useMemo(() => drawing.layer("overlay"), [drawing]);
+
+	// An unregistered backend id falls back to SVG rather than rendering nothing,
+	// for the same reason an unregistered node renderer does: configuration
+	// naming something the host forgot to load should degrade, not blank.
+	const backend = useMemo(() => {
+		if (backendId === SVG_BACKEND_ID || spire === undefined) return svgBackend;
+		return getRenderRegistries(spire)?.backends.get(backendId) ?? svgBackend;
+	}, [backendId, spire]);
 
 	// Status changes are reported by diffing against the previous render, so a
 	// host gets exactly one call per node that actually moved.
@@ -82,108 +95,68 @@ export function SpireMap(props: SpireMapProps): ReactElement {
 	// scrollable ancestor including the document, so focusing a node inside an
 	// embedded map yanks the whole page — the map is a component on someone
 	// else's page, and it has no business moving that page.
-	const rootRef = useRef<SVGSVGElement | null>(null);
+	//
+	// It works from the scene's own coordinates rather than by finding the
+	// node's element, so it behaves identically on a backend that has no element
+	// per node.
+	const rootRef = useRef<HTMLDivElement | null>(null);
+	// The scene and scale are read through a ref so that the effect depends on
+	// `focusNodeId` alone: focusing must happen when the host asks for a node,
+	// not every time the map re-renders under the same focus.
+	const latest = useRef({ scene, scale });
+	latest.current = { scene, scale };
 	useEffect(() => {
 		if (focusNodeId === undefined) return;
-		const root = rootRef.current;
+		const root = rootRef.current?.firstElementChild ?? null;
 		if (root === null) return;
 
-		const target = root.querySelector(`[data-spire-node="${CSS.escape(focusNodeId)}"]`);
-		if (target === null) return;
+		const { scene: current, scale: currentScale } = latest.current;
+		const node = current.nodes.find((candidate) => candidate.id === focusNodeId);
+		if (node === undefined) return;
 
 		const container = nearestScrollContainer(root);
 		if (container === null) return;
 
-		const targetBox = target.getBoundingClientRect();
+		const box = root.getBoundingClientRect();
 		const containerBox = container.getBoundingClientRect();
+		const originLeft = container.scrollLeft + (box.left - containerBox.left);
+		const originTop = container.scrollTop + (box.top - containerBox.top);
 
-		const left =
-			container.scrollLeft +
-			(targetBox.left - containerBox.left) -
-			(container.clientWidth - targetBox.width) / 2;
-		const top =
-			container.scrollTop +
-			(targetBox.top - containerBox.top) -
-			(container.clientHeight - targetBox.height) / 2;
-
-		container.scrollTo({ left, top, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+		container.scrollTo({
+			left: originLeft + node.center.x * currentScale - container.clientWidth / 2,
+			top: originTop + node.center.y * currentScale - container.clientHeight / 2,
+			behavior: prefersReducedMotion() ? "auto" : "smooth",
+		});
 	}, [focusNodeId]);
 
+	// `renderNode` reaches the backend keyed by node id, so a backend that cannot
+	// build a React tree per node can ignore it without knowing about the map.
+	const renderNodeById = useMemo(() => {
+		if (renderNode === undefined) return undefined;
+		return (nodeId: NodeId, status: NodeStatus): ReactElement | undefined => {
+			const node = map.nodes.find((candidate) => candidate.id === nodeId);
+			if (node === undefined) return undefined;
+			return renderNode(node, status) ?? undefined;
+		};
+	}, [renderNode, map]);
+
+	const Backend = backend.Component;
+
+	// `display: contents` so the wrapper adds no box of its own: it exists only
+	// as a stable handle on whatever the backend rendered.
 	return (
-		<svg
-			ref={rootRef}
-			className={className}
-			viewBox={`0 0 ${scene.size.width} ${scene.size.height}`}
-			width={round(scene.size.width * scale)}
-			height={round(scene.size.height * scale)}
-			role={onNodePress === undefined ? "img" : "group"}
-			style={scene.background === undefined ? undefined : { background: scene.background }}
-		>
-			<title>{title}</title>
-			<Shapes shapes={background} />
-
-			{scene.edges.map((edge) => (
-				<g key={edge.id} data-spire-edge={edge.id}>
-					<Shapes shapes={drawing.edge(edge)} />
-				</g>
-			))}
-
-			{scene.nodes.map((node) => {
-				// The React-only escape hatch wins when it returns something. It is
-				// the one way to draw something `renderToSVG` cannot reproduce, which
-				// is why the shape-returning renderers are the documented route.
-				const custom = renderNode?.(nodeOf(props, node.id), node.status);
-				const shape =
-					custom === undefined || custom === null ? <Shapes shapes={drawing.node(node)} /> : custom;
-				const transform = `translate(${node.center.x} ${node.center.y})`;
-
-				// Two branches rather than conditional props: a node is either an
-				// operable control with the full keyboard contract, or inert
-				// decoration. Half of each is what produces unreachable buttons.
-				if (onNodePress === undefined) {
-					return (
-						<g
-							key={node.id}
-							data-spire-node={node.id}
-							data-spire-status={node.status}
-							transform={transform}
-						>
-							{shape}
-						</g>
-					);
-				}
-
-				return (
-					// biome-ignore lint/a11y/useSemanticElements: SVG has no <button> element, so role plus tabIndex and key handling is the contract.
-					<g
-						key={node.id}
-						data-spire-node={node.id}
-						data-spire-status={node.status}
-						transform={transform}
-						role="button"
-						tabIndex={0}
-						aria-label={`${node.type} (${node.status})`}
-						style={{ cursor: "pointer" }}
-						onClick={() => onNodePress(node.id)}
-						onKeyDown={(event) => {
-							if (event.key === "Enter" || event.key === " ") {
-								event.preventDefault();
-								onNodePress(node.id);
-							}
-						}}
-					>
-						{shape}
-					</g>
-				);
-			})}
-
-			<Shapes shapes={overlay} />
-		</svg>
+		<div ref={rootRef} style={{ display: "contents" }}>
+			<Backend
+				scene={scene}
+				drawing={drawing}
+				scale={scale}
+				title={title}
+				className={className}
+				onNodePress={onNodePress}
+				renderNode={renderNodeById}
+			/>
+		</div>
 	);
-}
-
-function round(value: number): number {
-	return Math.round(value * 100) / 100;
 }
 
 /**
@@ -212,11 +185,4 @@ function prefersReducedMotion(): boolean {
 		typeof window !== "undefined" &&
 		window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
 	);
-}
-
-function nodeOf(props: SpireMapProps, nodeId: NodeId) {
-	const found = props.map.nodes.find((node) => node.id === nodeId);
-	if (found === undefined)
-		throw new Error(`Scene referenced a node the map does not have: ${nodeId}`);
-	return found;
 }

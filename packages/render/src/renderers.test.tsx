@@ -1,6 +1,7 @@
 import { createSpire, type MapDocument, SMF_VERSION, type StateDocument } from "@edv4h/spire-core";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import type { RenderBackend } from "./backend.js";
 import { createRenderPlugin } from "./plugin.js";
 import type { EdgeRenderer, LayerRenderer, NodeRenderer } from "./registries.js";
 import { getRenderRegistries } from "./registries.js";
@@ -208,5 +209,66 @@ describe("layer ordering", () => {
 		const svg = renderToSVG(map(), state, { spire: result.value });
 		expect(svg.indexOf("#first")).toBeLessThan(svg.indexOf("#second"));
 		expect(svg.indexOf("#second")).toBeLessThan(svg.indexOf("#third"));
+	});
+});
+
+describe("backends", () => {
+	/** A backend that draws nothing but says it ran. */
+	const marker: RenderBackend = {
+		id: "marker",
+		keyboardAccessible: false,
+		Component: ({ scene }) => <div data-backend="marker">{scene.nodes.length}</div>,
+	};
+
+	async function spireWithBackend() {
+		const result = await createSpire({ plugins: [createRenderPlugin({ backends: [marker] })] });
+		if (!result.ok) throw new Error("plugin setup failed");
+		return result.value;
+	}
+
+	it("uses SVG by default", () => {
+		const html = renderToStaticMarkup(<SpireMap map={map()} state={state} />);
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("uses a registered backend when named", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="marker" />,
+		);
+
+		expect(html).toContain('data-backend="marker"');
+		expect(html).not.toContain("<svg");
+	});
+
+	it("hands the backend the same scene the SVG one draws", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="marker" />,
+		);
+
+		// The marker prints the node count: both backends see one scene.
+		expect(html).toContain(">2<");
+	});
+
+	it("falls back to SVG for an id nobody registered", async () => {
+		const spire = await spireWithBackend();
+		const html = renderToStaticMarkup(
+			<SpireMap map={map()} state={state} spire={spire} backend="nope" />,
+		);
+
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("falls back to SVG when a backend is named without a spire", () => {
+		const html = renderToStaticMarkup(<SpireMap map={map()} state={state} backend="marker" />);
+		expect(html).toContain('data-spire-backend="svg"');
+	});
+
+	it("records whether a backend can be operated from the keyboard", async () => {
+		const spire = await spireWithBackend();
+		const registries = getRenderRegistries(spire);
+
+		expect(registries?.backends.get("marker")?.keyboardAccessible).toBe(false);
 	});
 });

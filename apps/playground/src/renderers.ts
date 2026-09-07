@@ -85,7 +85,7 @@ export const arrowRenderer: EdgeRenderer = {
 			line,
 			{
 				shape: "group",
-				transform: `translate(${edge.end.x} ${edge.end.y}) rotate(${angle.toFixed(2)})`,
+				transform: { translate: [edge.end.x, edge.end.y], rotate: angle },
 				children: [
 					{
 						shape: "polygon",

@@ -68,6 +68,7 @@ export function App(): ReactElement {
 		nodeRenderer: "",
 		edgeRenderer: "",
 		layers: true,
+		backend: "svg",
 	});
 
 	// The chosen renderer ids go into the theme, because that is where the SDK

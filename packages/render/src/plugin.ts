@@ -1,4 +1,5 @@
 import { SPIRE_PLUGIN_API_VERSION, type SpirePlugin } from "@edv4h/spire-core";
+import type { RenderBackend } from "./backend.js";
 import {
 	createRenderRegistries,
 	type EdgeRenderer,
@@ -13,6 +14,7 @@ export interface RenderPluginOptions {
 	nodeRenderers?: readonly NodeRenderer[];
 	edgeRenderers?: readonly EdgeRenderer[];
 	layers?: readonly LayerRenderer[];
+	backends?: readonly RenderBackend[];
 }
 
 /**
@@ -24,8 +26,8 @@ export interface RenderPluginOptions {
  * the component.
  *
  * There are no built-in entries. The default look is not a registered renderer
- * — it is the fallback in `createDrawing`, so a map draws correctly with no
- * plugins loaded at all.
+ * — it is the fallback in `createDrawing` — and the SVG backend is not a
+ * registered backend, so a map draws correctly with no plugins loaded at all.
  */
 export function createRenderPlugin(options: RenderPluginOptions = {}): SpirePlugin {
 	return {
@@ -42,6 +44,7 @@ export function createRenderPlugin(options: RenderPluginOptions = {}): SpirePlug
 				registries.edgeRenderers.register(renderer);
 			}
 			for (const layer of options.layers ?? []) registries.layers.register(layer);
+			for (const backend of options.backends ?? []) registries.backends.register(backend);
 
 			return renderService.provide(ctx.services, registries);
 		},

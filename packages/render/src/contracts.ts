@@ -32,6 +32,15 @@ export interface SpireMapProps {
 	 * Without it every node and edge draws the built-in look.
 	 */
 	spire?: Spire;
+	/**
+	 * Id of a registered `RenderBackend`. Defaults to `"svg"`, which is built in
+	 * and needs no plugin. An unregistered id falls back to SVG.
+	 *
+	 * Backends differ in what they can offer: SVG gives every node its own
+	 * focusable element, a canvas gives throughput and cannot. `keyboardAccessible`
+	 * on the backend records which.
+	 */
+	backend?: string;
 	onNodePress?: (nodeId: NodeId) => void;
 	/**
 	 * Escape hatch: draw a node yourself. Return `undefined` or `null` to fall

@@ -16,6 +16,8 @@ export interface ViewSettings {
 	edgeRenderer: string;
 	/** Draw the demo background and overlay layers. */
 	layers: boolean;
+	/** Id of a registered RenderBackend, or "svg" for the built-in. */
+	backend: string;
 }
 
 interface Props {
@@ -224,6 +226,17 @@ export function MapView({
 				</label>
 
 				<label>
+					<span className="hint">バックエンド</span>
+					<select
+						value={view.backend}
+						onChange={(event) => onView({ ...view, backend: event.target.value })}
+					>
+						<option value="svg">svg（既定・キーボード可）</option>
+						<option value="playground:canvas">playground:canvas</option>
+					</select>
+				</label>
+
+				<label>
 					<input
 						type="checkbox"
 						checked={view.layers}
@@ -272,6 +285,7 @@ export function MapView({
 						jitter={{ amount: view.jitter }}
 						curvature={view.curvature}
 						scale={view.scale}
+						backend={view.backend}
 						onNodePress={onNodePress}
 						{...(focusNodeId === undefined ? {} : { focusNodeId })}
 					/>
@@ -283,7 +297,8 @@ export function MapView({
 					ノードを押すと完了／取り消し。下端が row 0、上端が終端行。⌘/Ctrl +
 					ホイールで拡大縮小。既定の <code>single-route</code>{" "}
 					では道は1本しか選べない（分岐の片方を通ると、もう片方は閉じる）。描画を変えたら「SVG
-					をコピー」も見ること — <code>renderToSVG</code> が同じ図形を描く。
+					をコピー」も見ること — <code>renderToSVG</code> が同じ図形を描く。canvas バックエンドは
+					DOM が1要素で済む代わりに、ノードをキーボードで辿れない。
 				</p>
 				{transitions.length > 0 && (
 					<ul className="transitions mono">
