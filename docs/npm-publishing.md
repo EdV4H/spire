@@ -4,6 +4,9 @@
 publish する。長命の `NPM_TOKEN` は使わない — 認証はジョブごとに発行される短命の
 トークン（`permissions: id-token: write`）で、provenance も自動で付く。
 
+初回の publish と trusted publisher の設定は **2026-09-07 に完了済み**。以降にやる
+ことは「平常運転」だけで、下のブートストラップの節は記録として残してある。
+
 ## 公開するもの（6パッケージ）
 
 ```
@@ -32,14 +35,30 @@ publish する。長命の `NPM_TOKEN` は使わない — 認証はジョブご
 つまり **publish を人が叩くことはない**。マージが唯一のトリガーであり、
 何が出るかは Version PR の差分として事前にレビューできる。
 
-## 初回だけ必要なこと（ブートストラップ）
-
-trusted publisher は **既存のパッケージにしか付けられない**。まだ npm 上に存在しない
-パッケージに `npm trust` すると 403 が返る。鶏卵になっているので、初回だけ手で
-publish する必要がある。
+## 公開されたかの確認
 
 ```bash
-npm install -g npm@latest                                    # npm >= 11.15
+curl -s https://registry.npmjs.org/@edv4h/spire-core/latest | jq .version
+```
+
+**`npm search` や npmjs.com の検索は使わない。** 検索インデックスは publish から
+数分〜数時間遅れる別系統なので、上がっているのに「無い」と見える。メタデータ API
+（上のパス）が実体。npm の CDN は 404 を短時間キャッシュするので、publish 直前に
+引いた 404 がしばらく残ることもある。
+
+trusted publisher 側の確認:
+
+```bash
+npm trust list @edv4h/spire-core --registry=https://registry.npmjs.org/
+```
+
+## 初回のブートストラップ（済み・記録）
+
+trusted publisher は **既存のパッケージにしか付けられない**。まだ npm 上に存在しない
+パッケージには付けられないので鶏卵になっており、初回だけ手で publish する必要が
+あった。
+
+```bash
 npm login --scope=@edv4h --registry=https://registry.npmjs.org/
 
 git checkout main && git pull                                # Version PR マージ後
@@ -48,17 +67,30 @@ pnpm build
 
 # pnpm publish は workspace:* を実バージョンに解決してから送る（npm publish は
 # しない）。-r で依存順に6つ回る。
-pnpm publish -r --access public --registry https://registry.npmjs.org/ --otp <6桁>
-```
+npm_config_allow_file=all pnpm publish -r --access public \
+  --registry https://registry.npmjs.org/
 
-publish できたら trusted publisher を設定する。以降 CI が publish できるようになる:
-
-```bash
 ./scripts/setup-npm-trusted-publishers.sh
 ```
 
-### 詰まりどころ
+### 実際に踏んだもの
 
+- **`--registry` を渡しても認証トークンは切り替わらない → `E404` on PUT.**
+  npm はトークンをレジストリの URL ごとに引くので、`~/.npmrc` に
+  `//registry.npmjs.org/:_authToken` が無いと匿名で PUT して 404 になる。スコープ
+  付きパッケージでは 401 ではなく **404 が「認証されていない」の意味**で返るので、
+  パッケージ名の間違いに見えて紛らわしい。先に `npm login` すること。確認は
+  `npm whoami --registry=https://registry.npmjs.org/`
+- **`EALLOWFILE — Fetching packages of type "file" have been disabled`.**
+  `pnpm publish` は tarball に固めてから `npm publish <tgz>` に渡すので、npm からは
+  `file:` スペックに見える。npm の既定は `allow-file=all` なので、これが出るのは
+  `~/.npmrc` がハードニングされている環境。`npm_config_allow_file=all` を前置すれば
+  その1コマンドだけ上書きできる（優先順位は CLI > 環境変数 > プロジェクト npmrc >
+  user npmrc）。`~/.npmrc` を書き換える必要はない
+- **`--otp <6桁>` は付けない。** 2FA が有効なアカウントでは npm がブラウザ認証を
+  開く。TOTP コードを渡す形にすると、6パッケージを回る間に 30 秒で切れて後半が
+  `EOTP` で落ちる。最初の認証時に **「skip 2FA for the next 5 minutes」** を選ぶと、
+  残りと trust スクリプトが続けて通る
 - **`~/.npmrc` の private registry → 405.** `@edv4h` を社内 registry に向けている
   場合、`npm trust` はそちらを叩いて `405 Method Not Allowed` になる（trusted
   publishing 非対応）。`--registry https://registry.npmjs.org/` を必ず渡す。

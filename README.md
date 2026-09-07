@@ -31,6 +31,16 @@ Spire は「目標」「クエスト」「踏破」といった意味論を持�
 
 依存方向は `gen → core ← layout ← render`。**gen と render は互いを知らない。**
 
+## インストール
+
+```bash
+pnpm add @edv4h/spire-core @edv4h/spire-gen          # 生成まで
+pnpm add @edv4h/spire-layout @edv4h/spire-render     # 描画するなら
+```
+
+ESM 専用、`exports` は `"."` だけ。`@edv4h/spire-core` の実行時依存は `zod` のみで、
+DOM にも React にも依存しない。`@edv4h/spire-render` は `react >= 19` を peer に持つ。
+
 ## クイックスタート
 
 ```ts
