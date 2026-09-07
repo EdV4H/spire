@@ -120,9 +120,7 @@ export const rowGuidesLayer: LayerRenderer = {
 		const horizontal =
 			ctx.scene.orientation === "left-right" || ctx.scene.orientation === "right-left";
 
-		const at = new Set(
-			ctx.scene.nodes.map((node) => (horizontal ? node.anchor.x : node.anchor.y)),
-		);
+		const at = new Set(ctx.scene.nodes.map((node) => (horizontal ? node.anchor.x : node.anchor.y)));
 
 		return [...at].map((position) =>
 			horizontal

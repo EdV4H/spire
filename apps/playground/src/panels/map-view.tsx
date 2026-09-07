@@ -2,6 +2,7 @@ import type { MapDocument, NodeId, Spire, StateDocument } from "@edv4h/spire-cor
 import type { Orientation } from "@edv4h/spire-layout";
 import { SpireMap, type SpireTheme } from "@edv4h/spire-render";
 import { type ReactElement, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { CARD_SPACING, renderCardNode } from "../react-nodes.js";
 import { EDGE_RENDERERS, NODE_RENDERERS } from "../renderers.js";
 
 export interface ViewSettings {
@@ -18,6 +19,8 @@ export interface ViewSettings {
 	layers: boolean;
 	/** Id of a registered RenderBackend, or "svg" for the built-in. */
 	backend: string;
+	/** Draw nodes with the React-only `renderNode` escape hatch. */
+	reactNodes: boolean;
 }
 
 interface Props {
@@ -226,6 +229,15 @@ export function MapView({
 				</label>
 
 				<label>
+					<input
+						type="checkbox"
+						checked={view.reactNodes}
+						onChange={(event) => onView({ ...view, reactNodes: event.target.checked })}
+					/>
+					<span className="hint">React 描画</span>
+				</label>
+
+				<label>
 					<span className="hint">バックエンド</span>
 					<select
 						value={view.backend}
@@ -286,11 +298,19 @@ export function MapView({
 						curvature={view.curvature}
 						scale={view.scale}
 						backend={view.backend}
+						{...(view.reactNodes ? { renderNode: renderCardNode, spacing: CARD_SPACING } : {})}
 						onNodePress={onNodePress}
 						{...(focusNodeId === undefined ? {} : { focusNodeId })}
 					/>
 				)}
 			</div>
+
+			{view.reactNodes && (
+				<p className="hint hint--warn">
+					<code>renderNode</code> は React でしか動かない。「SVG をコピー」も canvas
+					バックエンドも、このカードではなくテーマの円を描く — 図形を返すレンダラとの違いはここ。
+				</p>
+			)}
 
 			<div className="map-foot">
 				<p className="hint">

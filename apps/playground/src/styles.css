@@ -365,6 +365,10 @@ select {
 	color: var(--muted);
 }
 
+.hint--warn {
+	color: var(--warn);
+}
+
 .empty {
 	color: var(--muted);
 	padding: 48px 0;
