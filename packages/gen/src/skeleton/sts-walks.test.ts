@@ -1,4 +1,4 @@
-import { checkInvariants } from "@edv4h/spire-core";
+import { checkInvariants, paths } from "@edv4h/spire-core";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { generate } from "../generate.js";
@@ -189,4 +189,120 @@ describe("sts-walks — one beginning, one summit", () => {
 			{ numRuns: 150 },
 		);
 	}, 30_000);
+});
+
+describe("sts-walks — choke rows", () => {
+	it("puts exactly one node on a choked row", async () => {
+		const result = await generate(specWith({ chokeRows: [5], walks: 6, minStarts: 3 }));
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(countOnRow(result.value.nodes, 5)).toBe(1);
+	});
+
+	it("routes every path through it", async () => {
+		// The count is the mechanism; this is the property that count is for.
+		const result = await generate(specWith({ chokeRows: [4], walks: 6, minStarts: 3 }));
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const choke = result.value.nodes.find((node) => node.position.row === 4);
+		expect(choke).toBeDefined();
+
+		const routes = paths(result.value);
+		expect(routes.paths.length).toBeGreaterThan(1);
+		for (const route of routes.paths) {
+			expect(route).toContain(choke?.id);
+		}
+	});
+
+	it("handles several choke rows at once", async () => {
+		const result = await generate(specWith({ chokeRows: [3, 6], walks: 6, minStarts: 3 }));
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(countOnRow(result.value.nodes, 3)).toBe(1);
+		expect(countOnRow(result.value.nodes, 6)).toBe(1);
+		expect(checkInvariants(result.value)).toEqual([]);
+	});
+
+	it("still produces a valid map, with no crossings", async () => {
+		await fc.assert(
+			fc.asyncProperty(
+				fc.record({
+					seed: fc.integer({ min: -20_000, max: 20_000 }),
+					cols: fc.integer({ min: 2, max: 7 }),
+					walks: fc.integer({ min: 1, max: 8 }),
+					chokeRow: fc.integer({ min: 1, max: 8 }),
+				}),
+				async (input) => {
+					const result = await generate({
+						seed: input.seed,
+						skeleton: {
+							grid: { cols: input.cols, rows: 10 },
+							walks: input.walks,
+							minStarts: 1,
+							maxStarts: null,
+							chokeRows: [input.chokeRow],
+						},
+						types: {
+							distribution: { step: 1 },
+							constraints: [{ rule: "fixedRow", row: -1, type: "final" }],
+						},
+					});
+
+					expect(result.ok).toBe(true);
+					if (!result.ok) return;
+					expect(countOnRow(result.value.nodes, input.chokeRow)).toBe(1);
+					expect(checkInvariants(result.value)).toEqual([]);
+				},
+			),
+			{ numRuns: 150 },
+		);
+	}, 30_000);
+
+	it("rejects a choke on row 0 or the terminal row", async () => {
+		const first = await generate(specWith({ chokeRows: [0] }));
+		const last = await generate(specWith({ chokeRows: [9] }));
+
+		expect(first.ok).toBe(false);
+		expect(last.ok).toBe(false);
+		if (first.ok) return;
+		expect(first.error.message).toContain("chokeRows must name rows");
+	});
+
+	it("rejects more entry points than a near choke can be reached from", async () => {
+		// A choke at row 1 is one step from row 0, so at most three columns can
+		// reach it. Caught up front rather than for unlucky seeds only.
+		const result = await generate(specWith({ chokeRows: [1], minStarts: 4, walks: 5 }));
+
+		expect(result.ok).toBe(false);
+		if (result.ok) return;
+		expect(result.error.message).toContain("cannot be reached from a choke at row 1");
+	});
+});
+
+describe("sts-walks — maxEnds with unreachable starts", () => {
+	it("keeps the cap when the grid is too short to walk across", async () => {
+		// Regression: entry columns were drawn from the whole grid, so a start
+		// that could not reach the landing block produced a terminal node of its
+		// own and blew the cap. Two rows means one step, so nothing can travel.
+		for (let seed = 0; seed < 25; seed++) {
+			const result = await generate({
+				seed,
+				skeleton: {
+					grid: { cols: 5, rows: 2 },
+					walks: 5,
+					minStarts: 4,
+					maxStarts: 4,
+					maxEnds: 1,
+				},
+				types: { distribution: { step: 1 }, constraints: [] },
+			});
+
+			expect(result.ok).toBe(true);
+			if (!result.ok) return;
+			expect(countOnRow(result.value.nodes, 1), `seed ${seed}`).toBe(1);
+		}
+	});
 });

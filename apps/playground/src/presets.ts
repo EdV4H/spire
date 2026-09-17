@@ -90,6 +90,30 @@ export const presets: readonly Preset[] = [
 		},
 	},
 	{
+		id: "choke",
+		label: "途中で必ず通る",
+		note: "chokeRows: [5] で行5をノード1つに絞る。全ルートがそこを通る — 迂回路が存在しない。fixedRow で中ボスにしてある。",
+		requires: [],
+		spec: {
+			seed: 42,
+			skeleton: {
+				grid: { cols: 5, rows: 12 },
+				walks: 6,
+				minStarts: 3,
+				chokeRows: [5],
+			},
+			types: {
+				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },
+				constraints: [
+					{ rule: "fixedRow", row: -1, type: "final" },
+					{ rule: "fixedRow", row: 5, type: "boss" },
+					{ rule: "branchDistinct", exempt: ["final", "boss"] },
+				],
+			},
+			populate: null,
+		},
+	},
+	{
 		id: "rules-extra",
 		label: "追加ルール",
 		note: "rules-extra プラグインの maxTotal / rowRange / afterTypes を使う。プラグインを外すと unknown rule で落ちる。",

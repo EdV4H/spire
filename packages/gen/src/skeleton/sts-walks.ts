@@ -33,6 +33,14 @@ const paramsSchema = z.looseObject({
 	maxStarts: z.int().positive().nullish(),
 	// `null` and `undefined` both mean no cap.
 	maxEnds: z.int().positive().nullish(),
+	/**
+	 * Rows every route must funnel through a single node on.
+	 *
+	 * Row 0 and the terminal row are not allowed here: `minStarts`/`maxStarts`
+	 * and `maxEnds` already own those, and two knobs for one thing is how a spec
+	 * ends up contradicting itself.
+	 */
+	chokeRows: z.array(z.int().nonnegative()).default([]),
 	connectivity: z.literal("closest3"),
 });
 
@@ -78,6 +86,31 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 				});
 			}
 
+			const terminalRow = rows - 1;
+			const outOfRange = params.chokeRows.filter((row) => row < 1 || row >= terminalRow);
+			if (outOfRange.length > 0) {
+				return err({
+					code: "impossible" as const,
+					message: `chokeRows must name rows between 1 and ${terminalRow - 1}; got ${outOfRange.join(", ")}. Row 0 is controlled by minStarts/maxStarts and row ${terminalRow} by maxEnds.`,
+					meta: { chokeRows: params.chokeRows, terminalRow },
+				});
+			}
+
+			// A choke at row R is at most R columns from row 0, so it leaves an
+			// entry window of at most 2R+1 columns. Checked here rather than left
+			// to the draw, so a spec cannot fail for some seeds and not others.
+			const firstChoke = [...params.chokeRows].sort((a, b) => a - b)[0];
+			if (firstChoke !== undefined) {
+				const room = Math.min(cols, 2 * firstChoke + 1);
+				if (params.minStarts > room) {
+					return err({
+						code: "impossible" as const,
+						message: `minStarts ${params.minStarts} cannot be reached from a choke at row ${firstChoke}, which leaves room for at most ${room} entry columns.`,
+						meta: { minStarts: params.minStarts, chokeRow: firstChoke, room },
+					});
+				}
+			}
+
 			// `null` is the explicit "no cap"; omitting it pins the count to the
 			// floor, which is what asking for a floor almost always means.
 			const maxStarts =
@@ -85,6 +118,7 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 
 			return ok(
 				walk(params.grid, params.walks, params.minStarts, rng, {
+					chokeRows: params.chokeRows,
 					...(maxStarts === undefined ? {} : { maxStarts }),
 					...(params.maxEnds == null ? {} : { maxEnds: params.maxEnds }),
 				}),
@@ -96,6 +130,24 @@ export function createStsWalksAlgorithm(): SkeletonAlgorithm {
 interface Funnel {
 	maxStarts?: number;
 	maxEnds?: number;
+	chokeRows: readonly number[];
+}
+
+/**
+ * A row, and the columns a walk may occupy on it.
+ *
+ * The terminal cap and every choke row are the same thing at different widths,
+ * so they are one list. The window at any other row is the intersection of what
+ * each gate allows once widened by the rows between — and because that window is
+ * shared by every walk, their left-to-right order is preserved and the funnel
+ * still cannot introduce a crossing. An intersection of intervals whose ends
+ * each move by at most one column per row also moves by at most one, so the
+ * argument survives having more than one gate.
+ */
+interface Gate {
+	row: number;
+	lo: number;
+	hi: number;
 }
 
 function walk(
@@ -114,8 +166,17 @@ function walk(
 	const edgeKeys = new Set<string>();
 	const edges: SkeletonEdge[] = [];
 
-	const landing = chooseLanding(cols, walks, funnel.maxEnds, rng);
-	const startColumns = chooseStarts(cols, walks, minStarts, funnel.maxStarts, rng);
+	const gates = chooseGates(cols, walks, terminalRow, minStarts, funnel, rng);
+	// Entry columns come from the window at row 0, not from the whole grid: a
+	// start the gates cannot be reached from produces a walk that never lands
+	// where it was supposed to, which is how `maxEnds` used to be exceeded.
+	const startColumns = chooseStarts(
+		allowedWindow(gates, 0, cols),
+		walks,
+		minStarts,
+		funnel.maxStarts,
+		rng,
+	);
 
 	for (const startCol of startColumns) {
 		let col = startCol;
@@ -123,7 +184,7 @@ function walk(
 
 		for (let row = 0; row < terminalRow; row++) {
 			const steps = stepsByRow[row] ?? [];
-			const window = allowedWindow(landing, terminalRow, row + 1, cols);
+			const window = allowedWindow(gates, row + 1, cols);
 
 			const inWindow = candidateColumns(col, cols).filter(
 				(next) => next >= window.lo && next <= window.hi,
@@ -166,83 +227,138 @@ function walk(
 }
 
 /**
- * The contiguous block of columns the walks are allowed to finish in.
- *
- * A single block rather than scattered targets, because the funnel is enforced
- * as one widening interval that every walk shares — which is what makes it
- * impossible for the funnel to force two walks to swap sides and cross. With
- * `maxEnds: 1` the block is one column and every route ends on the same node.
+ * Where each gate sits, chosen in row order so every gate is reachable from the
+ * one before it. Choosing them independently would let a spec ask for two
+ * chokes a single row apart at opposite edges — unreachable, and only
+ * discoverable once a walk was already stuck.
  */
-function chooseLanding(
+function chooseGates(
 	cols: number,
 	walks: number,
-	maxEnds: number | undefined,
+	terminalRow: number,
+	minStarts: number,
+	funnel: Funnel,
 	rng: Rng,
-): { lo: number; hi: number } {
-	if (maxEnds === undefined) return { lo: 0, hi: cols - 1 };
+): Gate[] {
+	const gates: Gate[] = [];
+	let previous: Gate | undefined;
 
-	const width = Math.max(1, Math.min(maxEnds, cols, walks));
-	const lo = rng.int(cols - width + 1);
-	return { lo, hi: lo + width - 1 };
+	for (const row of [...new Set(funnel.chokeRows)].sort((a, b) => a - b)) {
+		const reach = reachFrom(previous, row, cols);
+		// A choke near row 0 squeezes the entry window, so prefer columns that
+		// still leave room for the entry points the spec asked for. `impossible`
+		// has already rejected the cases where no column can.
+		const roomy = columnsIn(reach).filter(
+			(col) => width(allowedWindow([{ row, lo: col, hi: col }], 0, cols)) >= minStarts,
+		);
+		const options = roomy.length > 0 ? roomy : columnsIn(reach);
+		const col = options[rng.int(options.length)] ?? reach.lo;
+
+		previous = { row, lo: col, hi: col };
+		gates.push(previous);
+	}
+
+	if (funnel.maxEnds !== undefined) {
+		const block = Math.max(1, Math.min(funnel.maxEnds, cols, walks));
+
+		if (previous === undefined) {
+			// The single-gate draw, unchanged, so a spec with no choke rows still
+			// produces the same map from the same seed.
+			const lo = rng.int(cols - block + 1);
+			gates.push({ row: terminalRow, lo, hi: lo + block - 1 });
+		} else {
+			const reach = reachFrom(previous, terminalRow, cols);
+			const last = Math.max(reach.lo, Math.min(reach.hi - block + 1, cols - block));
+			const lo = reach.lo + rng.int(Math.max(1, last - reach.lo + 1));
+			gates.push({ row: terminalRow, lo, hi: Math.min(cols - 1, lo + block - 1) });
+		}
+	}
+
+	return gates;
 }
 
-/**
- * Columns reachable at `row` while still being able to land inside the block.
- *
- * A step moves at most one column, so a walk at row `r` can still reach the
- * block if it is within `terminalRow - r` columns of it. Applying that as a
- * hard filter funnels the walks in without any extra bookkeeping — and because
- * the interval is the same for every walk, it preserves their left-to-right
- * order.
- */
-function allowedWindow(
-	landing: { lo: number; hi: number },
-	terminalRow: number,
+/** Columns reachable at `row` from the gate before it, a column per row of slack. */
+function reachFrom(
+	previous: Gate | undefined,
 	row: number,
 	cols: number,
 ): { lo: number; hi: number } {
-	const slack = terminalRow - row;
+	if (previous === undefined) return { lo: 0, hi: cols - 1 };
+	const slack = row - previous.row;
 	return {
-		lo: Math.max(0, landing.lo - slack),
-		hi: Math.min(cols - 1, landing.hi + slack),
+		lo: Math.max(0, previous.lo - slack),
+		hi: Math.min(cols - 1, previous.hi + slack),
 	};
 }
 
 /**
- * Entry columns for the walks.
+ * Columns a walk may occupy at `row`: what every gate allows, intersected.
+ *
+ * A step moves at most one column, so a walk at row `r` can still make a gate
+ * `n` rows away if it is within `n` columns of it. Applying that as a hard
+ * filter funnels the walks without any extra bookkeeping.
+ */
+function allowedWindow(
+	gates: readonly Gate[],
+	row: number,
+	cols: number,
+): { lo: number; hi: number } {
+	let lo = 0;
+	let hi = cols - 1;
+	for (const gate of gates) {
+		const slack = Math.abs(gate.row - row);
+		lo = Math.max(lo, gate.lo - slack);
+		hi = Math.min(hi, gate.hi + slack);
+	}
+	return { lo, hi };
+}
+
+function width(span: { lo: number; hi: number }): number {
+	return span.hi - span.lo + 1;
+}
+
+function columnsIn(span: { lo: number; hi: number }): number[] {
+	return Array.from({ length: width(span) }, (_, i) => span.lo + i);
+}
+
+/**
+ * Entry columns for the walks, drawn from the window row 0 allows.
  *
  * `minStarts` distinct columns are forced so a map cannot degenerate into a
  * single entry point by accident; `maxStarts` caps it so a map can be made to
  * have one on purpose. Walks beyond the distinct set reuse one of the columns
- * already chosen — not a fresh random column, which would quietly break the
- * cap.
+ * already chosen — not a fresh random column, which would quietly break the cap.
  */
 function chooseStarts(
-	cols: number,
+	entry: { lo: number; hi: number },
 	walks: number,
 	minStarts: number,
 	maxStarts: number | undefined,
 	rng: Rng,
 ): number[] {
+	const available = columnsIn(entry);
+
 	if (maxStarts === undefined) {
 		// Uncapped: walks past the floor pick freely, which is how a map ends up
-		// with more entry points than the minimum asked for. Left untouched so a
-		// spec without the cap keeps producing the same map from the same seed.
-		const distinct = rng.shuffle(range(cols)).slice(0, Math.min(minStarts, cols));
-		const rest = Array.from({ length: Math.max(0, walks - distinct.length) }, () => rng.int(cols));
+		// with more entry points than the minimum asked for.
+		const distinct = rng.shuffle(available).slice(0, Math.min(minStarts, available.length));
+		const rest = Array.from(
+			{ length: Math.max(0, walks - distinct.length) },
+			() => available[rng.int(available.length)] ?? entry.lo,
+		);
 		return [...distinct, ...rest];
 	}
 
-	const ceiling = Math.min(maxStarts, cols, walks);
+	const ceiling = Math.min(maxStarts, available.length, walks);
 	const floor = Math.min(minStarts, ceiling);
 	const distinctCount = floor + rng.int(ceiling - floor + 1);
 
-	const chosen = rng.shuffle(range(cols)).slice(0, distinctCount);
+	const chosen = rng.shuffle(available).slice(0, distinctCount);
 	// Extra walks reuse a lane that is already open — drawing a fresh column
 	// here is exactly what would break the cap.
 	const rest = Array.from(
 		{ length: Math.max(0, walks - chosen.length) },
-		() => chosen[rng.int(chosen.length)] ?? 0,
+		() => chosen[rng.int(chosen.length)] ?? entry.lo,
 	);
 	return [...chosen, ...rest];
 }
@@ -257,10 +373,6 @@ function candidateColumns(col: number, cols: number): number[] {
  */
 function crosses(steps: readonly Step[], from: number, to: number): boolean {
 	return steps.some((step) => (step.fromCol - from) * (step.toCol - to) < 0);
-}
-
-function range(n: number): number[] {
-	return Array.from({ length: n }, (_, i) => i);
 }
 
 function key(col: number, row: number): string {
