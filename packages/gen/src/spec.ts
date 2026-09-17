@@ -50,6 +50,17 @@ export const skeletonSpecSchema = z.looseObject({
 	 * end, so the funnel cannot introduce a crossing.
 	 */
 	maxEnds: z.int().positive().nullable().default(1),
+	/**
+	 * Rows every route must pass through a single node on.
+	 *
+	 * A mid-map choke point: `[5]` puts exactly one node on row 5, and because
+	 * every walk crosses every row, every route goes through it. Combine with
+	 * `{ "rule": "fixedRow", "row": 5, "type": "boss" }` for a mid-boss.
+	 *
+	 * Row 0 and the terminal row are rejected: `minStarts`/`maxStarts` and
+	 * `maxEnds` already decide those.
+	 */
+	chokeRows: z.array(z.int().nonnegative()).default([]),
 	/** Which columns a walk may step to next. */
 	connectivity: z.literal("closest3").default("closest3"),
 });

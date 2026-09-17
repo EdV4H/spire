@@ -1,9 +1,10 @@
-import { SPIRE_PLUGIN_API_VERSION, type SpirePlugin } from "@edv4h/spire-core";
+import { type NodeTypeId, SPIRE_PLUGIN_API_VERSION, type SpirePlugin } from "@edv4h/spire-core";
 import { type ContentProvider, createGenPlugin } from "@edv4h/spire-gen";
 import { createQuorumPolicyPlugin } from "@edv4h/spire-plugin-policy-quorum";
 import { createRulesExtraPlugin } from "@edv4h/spire-plugin-rules-extra";
 import { createRenderPlugin } from "@edv4h/spire-render";
 import { canvasBackend } from "./canvas-backend.js";
+import { createCheckpointPolicy } from "./checkpoint.js";
 import { EDGE_RENDERERS, LAYERS, NODE_RENDERERS } from "./renderers.js";
 
 /**
@@ -102,6 +103,17 @@ export interface PluginEntry {
 	create: () => SpirePlugin;
 }
 
+function createCheckpointPolicyPlugin(type: NodeTypeId): SpirePlugin {
+	return {
+		id: "playground:checkpoint",
+		name: "Checkpoint gate",
+		apiVersion: SPIRE_PLUGIN_API_VERSION,
+		setup(ctx) {
+			return ctx.policies.register(createCheckpointPolicy(type));
+		},
+	};
+}
+
 export const availablePlugins: readonly PluginEntry[] = [
 	{
 		id: "gen",
@@ -139,6 +151,13 @@ export const availablePlugins: readonly PluginEntry[] = [
 		create: () => createInlineDemoPlugin(),
 	},
 	{
+		id: "checkpoint",
+		label: "playground:checkpoint",
+		note: "「boss を1つ倒すまで先へ進めない」進行ポリシー。マップの形は変えずに必ず通る場所を作る。",
+		requires: [],
+		create: () => createCheckpointPolicyPlugin("boss"),
+	},
+	{
 		id: "renderers",
 		label: "@edv4h/spire-render",
 		note: "描画のレジストリと、ノード / エッジ / レイヤ / canvas バックエンドのデモ実装。外すと下の「描画」がすべて既定に戻る。",
@@ -159,5 +178,6 @@ export const defaultEnabled = [
 	"node-types",
 	"policy-quorum",
 	"inline",
+	"checkpoint",
 	"renderers",
 ];
