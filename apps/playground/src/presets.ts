@@ -91,8 +91,8 @@ export const presets: readonly Preset[] = [
 	},
 	{
 		id: "choke",
-		label: "途中で必ず通る（構造）",
-		note: "chokeRows: [5] で行5をノード1つに絞る。マップの形そのものが迂回を許さない。fixedRow で中ボスにしてある。",
+		label: "途中で必ず通る",
+		note: "chokeRows: [5] で行5をノード1つに絞る。全ルートがそこを通る — 迂回路が存在しない。fixedRow で中ボスにしてある。",
 		requires: [],
 		spec: {
 			seed: 42,
@@ -101,29 +101,6 @@ export const presets: readonly Preset[] = [
 				walks: 6,
 				minStarts: 3,
 				chokeRows: [5],
-			},
-			types: {
-				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },
-				constraints: [
-					{ rule: "fixedRow", row: -1, type: "final" },
-					{ rule: "fixedRow", row: 5, type: "boss" },
-					{ rule: "branchDistinct", exempt: ["final", "boss"] },
-				],
-			},
-			populate: null,
-		},
-	},
-	{
-		id: "checkpoint",
-		label: "途中で必ず通る（進行）",
-		note: "マップは分岐したまま。行5が boss で、進行ポリシーを checkpoint にすると1つ倒すまで先へ進めない。他のポリシーに変えると通れてしまう。",
-		requires: ["checkpoint"],
-		spec: {
-			seed: 42,
-			skeleton: {
-				grid: { cols: 5, rows: 12 },
-				walks: 6,
-				minStarts: 3,
 			},
 			types: {
 				distribution: { step: 0.6, gate: 0.25, bonus: 0.15 },
