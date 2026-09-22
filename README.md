@@ -25,7 +25,7 @@ Spire は「目標」「クエスト」「踏破」といった意味論を持�
 | [`@edv4h/spire-core`](packages/core) | Spire Map Format、バリデータ、進行ステートマシン、グラフ操作、プラグインカーネル |
 | [`@edv4h/spire-gen`](packages/gen) | 決定的なマップ生成（骨格 → タイプ割当 → コンテンツ注入） |
 | [`@edv4h/spire-layout`](packages/layout) | グリッド座標 → 画面座標、ジッター、ベジェ経路 |
-| [`@edv4h/spire-render`](packages/render) | React / 静的 SVG レンダラ、テーマ、差し替え可能な描画 |
+| [`@edv4h/spire-render`](packages/render) | React / 静的 SVG レンダラ、テーマ、差し替え可能な描画。React 抜きで使う `/headless` 入口あり |
 | [`@edv4h/spire-plugin-rules-extra`](plugins/rules-extra) | 追加の制約ルール |
 | [`@edv4h/spire-plugin-policy-quorum`](plugins/policy-quorum) | 「N 本の経路が合流したら開く」進行ポリシー |
 

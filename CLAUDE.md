@@ -29,7 +29,7 @@ npm 公開済み（`@edv4h/spire-*`、2026-09 に 0.1.0 / 0.2.0）。`core` / `g
 
 ### ビルド
 
-**bundler は使わない。** 各パッケージ `tsc -p tsconfig.build.json` のみ、ESM 専用、`exports` は `"."` だけ。tsdown を入れるのは「CJS デュアル配布が要る」「render に CDN 用の単一ファイルが要る」のいずれかが立ったときで、そのときも該当パッケージだけ。
+**bundler は使わない。** 各パッケージ `tsc -p tsconfig.build.json` のみ、ESM 専用。`exports` は原則 `"."` だけ — 例外は `@edv4h/spire-render` の `"./headless"` で、メインの入口が `SpireMap` を re-export する以上 React を読まずに `renderToSVG` だけ使う道が他に無いため（bundler は増えていない。エントリが1つ増えただけ）。同じ理由が立たない限り subpath を足さない。tsdown を入れるのは「CJS デュアル配布が要る」「render に CDN 用の単一ファイルが要る」のいずれかが立ったときで、そのときも該当パッケージだけ。
 
 - `tsconfig.json` = 型検査用（テストを含む）
 - `tsconfig.build.json` = ビルド用（テストと `__fixtures__` を除外）

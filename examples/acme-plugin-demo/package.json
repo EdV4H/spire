@@ -14,6 +14,7 @@
 	"dependencies": {
 		"@edv4h/spire-core": "workspace:*",
 		"@edv4h/spire-gen": "workspace:*",
+		"@edv4h/spire-render": "workspace:*",
 		"zod": "4.4.3"
 	},
 	"devDependencies": {

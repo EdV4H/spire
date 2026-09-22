@@ -10,14 +10,20 @@ import {
 	GEN_PLUGIN_ID,
 	getGenRegistries,
 } from "@edv4h/spire-gen";
+import {
+	createRenderPlugin,
+	getRenderRegistries,
+	type NodeRenderer,
+	RENDER_PLUGIN_ID,
+	type Shape,
+} from "@edv4h/spire-render/headless";
 import { z } from "zod";
 
 /**
  * A plugin written the way a third party would write one.
  *
  * This package is deliberately outside the `@edv4h` scope and depends only on
- * the two published entry points — no deep imports, no internal types, no
- * patching. If Spire's extension surface is real, everything an application
+ * published entry points — no deep imports, no internal types, no patching. If Spire's extension surface is real, everything an application
  * needs is reachable from here; if a future change breaks this package, it
  * broke the public API.
  *
@@ -27,7 +33,13 @@ import { z } from "zod";
  * - a constraint rule (`acme:spacing`)
  * - a progression policy (`acme:sequential`)
  * - a content provider (`acme:onboarding-copy`)
+ * - a node renderer (`acme:badge`)
  * - a service, so an application can reach its own API the same way
+ *
+ * It imports rendering from `@edv4h/spire-render/headless` and has no React
+ * dependency at all. That is the case the shape vocabulary exists for: a
+ * server drawing share images registers the same renderer the browser uses,
+ * and `renderToSVG` produces the same art.
  */
 
 export const ACME_PLUGIN_ID = "@acme/spire-onboarding";
@@ -120,16 +132,60 @@ function onboardingCopy(api: OnboardingApi): ContentProvider {
 	};
 }
 
+/**
+ * A checkpoint draws as a ring with the onboarding copy underneath.
+ *
+ * Returning shapes rather than an element is what lets this run on a server:
+ * nothing here is React, or a DOM node, or an SVG string. The coordinates are
+ * relative to the node's centre, which the backend has already translated to.
+ */
+function badgeRenderer(): NodeRenderer {
+	return {
+		id: "acme:badge",
+		draw(node): readonly Shape[] {
+			const title = typeof node.data?.title === "string" ? node.data.title : node.id;
+			const shapes: Shape[] = [
+				{
+					shape: "circle",
+					r: node.radius,
+					fill: node.fill,
+					stroke: node.stroke,
+					strokeWidth: node.strokeWidth,
+				},
+				{ shape: "circle", r: node.radius * 0.45, fill: "none", stroke: node.stroke },
+			];
+			// Only the completed ones carry their label; an unfinished map stays
+			// readable rather than turning into a wall of text.
+			if (node.status === "completed") {
+				shapes.push({
+					shape: "text",
+					y: node.radius + 12,
+					text: title,
+					fontSize: 10,
+					anchor: "middle",
+					fill: node.stroke,
+				});
+			}
+			return shapes;
+		},
+	};
+}
+
 export function createOnboardingPlugin(): SpirePlugin {
 	return {
 		id: ACME_PLUGIN_ID,
 		name: "Acme onboarding",
 		apiVersion: SPIRE_PLUGIN_API_VERSION,
-		dependencies: [GEN_PLUGIN_ID],
+		dependencies: [GEN_PLUGIN_ID, RENDER_PLUGIN_ID],
 		setup(ctx) {
 			const gen = getGenRegistries(ctx.services);
 			if (gen === undefined) {
 				throw new Error(`${ACME_PLUGIN_ID} requires ${GEN_PLUGIN_ID}.`);
+			}
+
+			const render = getRenderRegistries(ctx.services);
+			if (render === undefined) {
+				throw new Error(`${ACME_PLUGIN_ID} requires ${RENDER_PLUGIN_ID}.`);
 			}
 
 			const api: OnboardingApi = {
@@ -145,6 +201,7 @@ export function createOnboardingPlugin(): SpirePlugin {
 				ctx.policies.register(sequentialPolicy()),
 				gen.rules.register(spacingRule()),
 				gen.contentProviders.register(onboardingCopy(api)),
+				render.nodeRenderers.register(badgeRenderer()),
 				onboardingService.provide(ctx.services, api),
 			];
 
@@ -154,3 +211,7 @@ export function createOnboardingPlugin(): SpirePlugin {
 		},
 	};
 }
+
+// Re-exported so the test — and an application — can compose the two plugins
+// without a second import of the SDK.
+export { createRenderPlugin };

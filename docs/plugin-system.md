@@ -137,6 +137,12 @@ SVG バックエンドは `SpireMap` が直接持っている。プラグイン�
 バックエンドは `keyboardAccessible` を申告する。SVG は要素ごとにフォーカスできるので
 `true`、canvas は1要素なので `false` — 選ぶ場所で代償が見えるようにしてある。
 
+**React を持たないなら `@edv4h/spire-render/headless` から import する。** メインの
+入口は `SpireMap` を re-export するので、`renderToSVG` しか呼ばないコードでも React を
+読んでしまう。`headless` は React を import する3ファイルを除いた同じ中身で、
+レジストリもレンダラの型もすべてここから取れる。`examples/acme-plugin-demo` が
+React 非依存のままレンダラを登録しているのがその実例。
+
 ### レジストリ共通の振る舞い
 
 - `register(entry)` は **unregister クロージャを返す**（`Result` ではない。プラグインのコードが直線的に書けるほうが大事）

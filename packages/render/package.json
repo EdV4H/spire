@@ -2,7 +2,7 @@
 	"name": "@edv4h/spire-render",
 	"version": "0.2.0",
 	"type": "module",
-	"description": "Spire renderer contracts and default theme (v0.1: types only)",
+	"description": "React and static SVG renderers for Spire maps, with pluggable node, edge, layer and backend rendering",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -10,6 +10,11 @@
 			"source": "./src/index.ts",
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./headless": {
+			"source": "./src/headless.ts",
+			"types": "./dist/headless.d.ts",
+			"import": "./dist/headless.js"
 		}
 	},
 	"scripts": {
@@ -51,5 +56,10 @@
 	},
 	"peerDependencies": {
 		"react": ">=19"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		}
 	}
 }

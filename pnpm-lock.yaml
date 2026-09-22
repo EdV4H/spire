@@ -75,6 +75,9 @@ importers:
       '@edv4h/spire-gen':
         specifier: workspace:*
         version: link:../../packages/gen
+      '@edv4h/spire-render':
+        specifier: workspace:*
+        version: link:../../packages/render
       zod:
         specifier: 4.4.3
         version: 4.4.3

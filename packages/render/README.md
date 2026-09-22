@@ -29,7 +29,18 @@ const svg = renderToSVG(map, state, { theme: myTheme, scale: 2, title: "Q3 map" 
 見ない**。シェア画像が画面と食い違うのは最悪の壊れ方なので、どこに何をどの色で
 描くかを決める場所を1つに絞ってある。テストでも両者のジオメトリ一致を検証している。
 
-`renderToSVG` は DOM を触らないのでサーバでも動く。
+`renderToSVG` は DOM を触らない。ただし**メインの入口は `SpireMap` を re-export
+するので、import した時点で React を読む** — `renderToSVG` しか呼ばなくても。
+React を持たないサーバは `headless` を使う:
+
+```ts
+import { renderToSVG, createRenderPlugin } from "@edv4h/spire-render/headless";
+```
+
+React を import する3ファイル（`SpireMap` / `Shapes` / SVG バックエンド）を除いた
+だけで、他はすべて同じものが同じ identity で入っている。React は optional peer に
+してあるので、インストールも要らない。CI の `pnpm check:packaging` が、react を
+解決できない Node で実際に import して確かめている。
 
 ## 描画を差し替える
 

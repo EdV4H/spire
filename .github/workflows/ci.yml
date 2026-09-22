@@ -68,3 +68,6 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # Needs dist, so it rides along with the build job rather than running
+      # its own. Checks what a consumer gets, which the unit tests cannot see.
+      - run: pnpm check:packaging
