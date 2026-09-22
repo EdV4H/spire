@@ -8,7 +8,7 @@
 
 ## 現在のステータス
 
-v0.1 実装中。`core` / `gen` / `layout` / `render` 実装済み。`renderToPNG` のみ未実装。プラグインと機能を手で触る `apps/playground` がある。
+npm 公開済み（`@edv4h/spire-*`、2026-09 に 0.1.0 / 0.2.0）。`core` / `gen` / `layout` / `render` 実装済みで、`renderToPNG` のみ未実装。リリースは CI の OIDC trusted publishing 経由（`docs/npm-publishing.md`）。プラグインと機能を手で触る `apps/playground` がある。
 
 ## 重要ドキュメント
 
@@ -76,7 +76,7 @@ packages/
   core/     @edv4h/spire-core     — SMF・検証・進行・グラフ・プラグインカーネル
   gen/      @edv4h/spire-gen      — 生成パイプライン
   layout/   @edv4h/spire-layout   — グリッド→画面座標
-  render/   @edv4h/spire-render   — React / SVG レンダラ・テーマ
+  render/   @edv4h/spire-render   — React / SVG レンダラ・テーマ・差し替え可能な描画
 
 plugins/
   rules-extra/    @edv4h/spire-plugin-rules-extra
