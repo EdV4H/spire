@@ -105,6 +105,44 @@ setup(ctx) {
 
 これらが `PluginContext` に無いのは意図的で、`@edv4h/spire-core` は「生成」という概念を知らない。マップを読んで検証するだけのホストが生成器を抱える理由はない。
 
+### render が持つもの（`getRenderRegistries(ctx.services)`）
+
+| 名前 | 登録するもの |
+|---|---|
+| `nodeRenderers` | `NodeRenderer` — テーマの `node.<type>.renderer` |
+| `edgeRenderers` | `EdgeRenderer` — テーマの `edge.renderer` |
+| `layers` | `LayerRenderer` — 背景／オーバーレイ。テーマの `layers` で絞れる |
+| `backends` | `RenderBackend` — `<SpireMap backend="...">` |
+
+gen と同じ理由で `PluginContext` には無い。マップを保存して検証するだけのホストが
+描画コードを抱える必要はない。`createRenderPlugin()` を `createSpire` に渡すと有効になる。
+
+**組み込みは登録されない。** 既定の円とベジェは `createDrawing` のフォールバックで、
+SVG バックエンドは `SpireMap` が直接持っている。プラグインを1つも読まなくてもマップは
+正しく描ける、という状態を保つため。
+
+**未登録の id はフォールバックする。** テーマが読み込み忘れたレンダラを名指ししても、
+エラーにはせず組み込みの見た目で描く。テーマがマップを白紙にできてはいけない。
+
+レンダラは React 要素ではなく**図形（`Shape[]`）を返す**。`<SpireMap>` と
+`renderToSVG` が同じ図形を描くので、カスタムの見た目でもシェア画像が画面と一致する。
+渡されるのは `SceneNode` / `SceneEdge` だけで、マップドキュメントは渡らない —
+レイアウト・状態・テーマが解決済みなのは `Scene` だけであり、その外に手を伸ばすことが
+2つのバックエンドをずらす原因になる。
+
+`SpireMapProps.renderNode` は JSX を返す逃げ道として残っているが、**React でしか
+動かない**（`renderToSVG` は実行できず、canvas バックエンドは無視する）。`foreignObject`
+など本当に React が要るときだけ使う。
+
+バックエンドは `keyboardAccessible` を申告する。SVG は要素ごとにフォーカスできるので
+`true`、canvas は1要素なので `false` — 選ぶ場所で代償が見えるようにしてある。
+
+**React を持たないなら `@edv4h/spire-render/headless` から import する。** メインの
+入口は `SpireMap` を re-export するので、`renderToSVG` しか呼ばないコードでも React を
+読んでしまう。`headless` は React を import する3ファイルを除いた同じ中身で、
+レジストリもレンダラの型もすべてここから取れる。`examples/acme-plugin-demo` が
+React 非依存のままレンダラを登録しているのがその実例。
+
 ### レジストリ共通の振る舞い
 
 - `register(entry)` は **unregister クロージャを返す**（`Result` ではない。プラグインのコードが直線的に書けるほうが大事）
