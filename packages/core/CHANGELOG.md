@@ -1,5 +1,11 @@
 # @edv4h/spire-core
 
+## 0.2.0
+
+### Minor Changes
+
+- 4cca33c: 完了の記録に `output`(任意・SDK は解釈しない)を足し、`complete(..., { output })` で残せるようにする。`inputsOf(map, state, nodeId)` で、通ってきた直前のノードの `output` を読める(`single-route` では実際に通った腕だけ)。`mergeStates` のタイブレークに `output` を加え、可換性を保つ。
+
 ## 0.1.0
 
 ### Minor Changes

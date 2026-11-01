@@ -1,5 +1,12 @@
 # @edv4h/spire-layout
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [4cca33c]
+  - @edv4h/spire-core@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

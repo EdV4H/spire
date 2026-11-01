@@ -1,5 +1,13 @@
 # @edv4h/spire-plugin-rules-extra
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [4cca33c]
+  - @edv4h/spire-core@0.2.0
+  - @edv4h/spire-gen@0.2.1
+
 ## 0.1.1
 
 ### Patch Changes

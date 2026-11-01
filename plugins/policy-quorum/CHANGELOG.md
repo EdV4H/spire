@@ -1,5 +1,12 @@
 # @edv4h/spire-plugin-policy-quorum
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [4cca33c]
+  - @edv4h/spire-core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
