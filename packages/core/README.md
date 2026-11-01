@@ -15,9 +15,10 @@ checkInvariants(map: MapDocument): ValidationError[]
 // 進行（すべて純関数）
 getNodeStatus(map, state, nodeId): "completed" | "reachable" | "locked"
 getProgress(map, state): Progress
-complete(map, state, nodeId, options?): Result<StateDocument, RuleViolation>
+complete(map, state, nodeId, options?): Result<StateDocument, RuleViolation>   // options.output で結果を残す
 uncomplete(state, nodeId): StateDocument
 mergeStates(a, b): StateDocument        // 可換・結合的・冪等
+inputsOf(map, state, nodeId): NodeInput[] // 通ってきた直前のノードの output
 
 // グラフ（すべて新ドキュメントを返し、不変条件を再検査する）
 addNode / removeNode / addEdge / removeEdge / moveNode / updateNodeData / setNodeType

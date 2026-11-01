@@ -66,6 +66,12 @@ export const completionRecordSchema = z.looseObject({
 	at: z.string().min(1),
 	by: z.string().optional(),
 	data: freeform.optional(),
+	/**
+	 * What completing this node produced, handed to the nodes after it (`inputsOf`).
+	 * Opaque like `data`: the SDK never interprets it. `data` describes the
+	 * completion itself; `output` is the part meant to flow down the route.
+	 */
+	output: z.unknown().optional(),
 });
 
 export const stateDocumentSchema = z.looseObject({

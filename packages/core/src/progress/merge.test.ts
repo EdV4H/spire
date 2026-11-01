@@ -24,6 +24,7 @@ const recordArb: fc.Arbitrary<CompletionRecord> = fc.record(
 		data: fc.option(fc.dictionary(fc.constantFrom("k1", "k2"), fc.integer({ min: 0, max: 3 })), {
 			nil: undefined,
 		}),
+		output: fc.option(fc.constantFrom("x", "y", 1, { card: "clear" }), { nil: undefined }),
 	},
 	{ requiredKeys: ["at"] },
 );
