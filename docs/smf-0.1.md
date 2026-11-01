@@ -41,11 +41,13 @@ SMF は Spire の公開契約である。パッケージ間の通信も、アプ
   "smfVersion": "0.1",
   "mapId": "map_9f3a",
   "completed": {
-    "n1": { "at": "2026-08-01T10:00:00Z", "by": "user_x", "data": {} }
+    "n1": { "at": "2026-08-01T10:00:00Z", "by": "user_x", "data": {}, "output": {} }
   },
   "meta": {}
 }
 ```
+
+完了の記録の `data` と `output` は、どちらも SDK が解釈しない自由領域。`data` はその完了自体の記述、`output` はそのノードを終えて**後ろのノードへ渡すもの**(任意)。`complete(map, state, nodeId, { output })` で残し、`inputsOf` で後ろのノードから読む。
 
 **保存されるのはこれだけ。** 以下はすべて `@edv4h/spire-core` が map + state から計算する導出値であり、決して保存しない:
 
@@ -55,6 +57,7 @@ SMF は Spire の公開契約である。パッケージ間の通信も、アプ
 | `reachable` | 未完了、かつ row 0 のノードであるか、完了ノードから直接エッジが張られている |
 | `locked` | 未完了かつ reachable でない |
 | `Progress` | 完了数 / 全数、比率、reachable 数、最長完了パス、終端到達済みか |
+| `inputsOf(nodeId)` | 直前のノード(入る辺の先)のうち完了していて `output` を持つものの `{ from, output }`。エッジの宣言順。`single-route` では実際に通った腕だけになる |
 
 ---
 
@@ -87,7 +90,7 @@ SMF は Spire の公開契約である。パッケージ間の通信も、アプ
 
 - 完了の**和集合**を取る
 - 両者が同じノードを主張したら **`at` が早いほうの記録**を採る
-- `at` が同値なら `by` → `data` の安定シリアライズの辞書順で決定的にタイブレークする
+- `at` が同値なら `by` → `data` → `output` の安定シリアライズの辞書順で決定的にタイブレークする
 
 タイブレークがあるのは、`at` の比較だけでは可換にならないため。**`mergeStates(a, b)` と `mergeStates(b, a)` は deep-equal であり、結合的かつ冪等**。これはプロパティテストで担保されている（`packages/core/src/progress/merge.test.ts`）。
 

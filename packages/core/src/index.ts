@@ -51,6 +51,8 @@ export type {
 export { createRegistry } from "./plugin/registry.js";
 export type { ServiceHandle, ServiceRegistry, Unprovide } from "./plugin/service.js";
 export { createServiceRegistry, defineService } from "./plugin/service.js";
+export type { NodeInput } from "./progress/inputs.js";
+export { inputsOf } from "./progress/inputs.js";
 export { mergeStates } from "./progress/merge.js";
 export { BUILTIN_POLICIES, FREE, SINGLE_ROUTE, STRICT } from "./progress/policies.js";
 // Progression

@@ -10,7 +10,7 @@ import type { CompletionRecord, StateDocument } from "../types.js";
  *
  * "Earliest" alone is not enough to make the merge commutative — two records
  * can share a timestamp. The tie-break is a total order over the record's
- * content (`by`, then a stable serialization of `data`), so the winner does not
+ * content (`by`, then stable serializations of `data` and `output`), so the winner does not
  * depend on argument order. `mergeStates(a, b)` and `mergeStates(b, a)` are
  * deep-equal; the property tests pin that, along with associativity and
  * idempotence.
@@ -64,7 +64,10 @@ function earlier(a: CompletionRecord, b: CompletionRecord): CompletionRecord {
 	if (byA !== byB) return byA < byB ? a : b;
 
 	// Last resort so the result cannot depend on argument order.
-	return stableStringify(a.data) <= stableStringify(b.data) ? a : b;
+	const dataA = stableStringify(a.data);
+	const dataB = stableStringify(b.data);
+	if (dataA !== dataB) return dataA < dataB ? a : b;
+	return stableStringify(a.output) <= stableStringify(b.output) ? a : b;
 }
 
 /**

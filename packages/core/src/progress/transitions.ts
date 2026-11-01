@@ -34,6 +34,8 @@ export interface CompleteOptions {
 	at?: string;
 	by?: string;
 	data?: Record<string, unknown>;
+	/** What completing the node produced, for the nodes after it to read with `inputsOf`. */
+	output?: unknown;
 }
 
 export function complete(
@@ -79,6 +81,7 @@ export function complete(
 		at: options.at ?? new Date().toISOString(),
 		...(options.by === undefined ? {} : { by: options.by }),
 		...(options.data === undefined ? {} : { data: options.data }),
+		...(options.output === undefined ? {} : { output: options.output }),
 	};
 
 	return ok({
