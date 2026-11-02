@@ -1,6 +1,6 @@
 {
 	"name": "@edv4h/spire-render",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"type": "module",
 	"description": "React and static SVG renderers for Spire maps, with pluggable node, edge, layer and backend rendering",
 	"main": "./dist/index.js",
